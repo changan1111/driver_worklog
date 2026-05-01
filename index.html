@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Charan Logistics — Driver Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden;font-family:'IBM Plex Sans',sans-serif;background:#0d1117}
+button,input,textarea,select{font-family:'IBM Plex Sans',sans-serif;font-size:inherit}
+button{cursor:pointer;border:none;background:none}
+textarea{resize:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(212,144,42,.25);border-radius:4px}
+
+:root{
+  --ink:#0d1117;--ink2:#161b22;--ink3:#1c2333;
+  --amber:#d4902a;--amber2:#f0b84a;--amber-dim:rgba(212,144,42,.08);
+  --amber-border:rgba(212,144,42,.18);--amber-glow:rgba(212,144,42,.25);
+  --cream:#f5efe0;--muted:#7a8599;--dim:#3d4a5c;
+  --red:#e05252;--green:#3a8a5a;
+  --nav-h:58px;--sb-w:240px;--bnav-h:62px;
+}
+
+.bg-base{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 120% 80% at 110% 110%,rgba(212,144,42,.08) 0%,transparent 55%),radial-gradient(ellipse 80% 60% at -10% -10%,rgba(28,35,51,.9) 0%,transparent 60%),#0d1117}
+.bg-dots{position:fixed;inset:0;z-index:0;background-image:radial-gradient(rgba(212,144,42,.05) 1px,transparent 1px);background-size:28px 28px}
+.bg-glow{position:fixed;z-index:0;bottom:-120px;left:-80px;width:500px;height:500px;background:radial-gradient(circle,rgba(28,35,51,.8) 0%,transparent 70%);border-radius:50%}
+
+/* ── TOPNAV ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(13,17,23,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--amber-border);
+  display:flex;align-items:center;padding:0 16px;gap:12px;
+  z-index:400;
+}
+.nav-ham{display:none;width:38px;height:38px;align-items:center;justify-content:center;border:1px solid rgba(212,144,42,.2);border-radius:3px;color:var(--muted);font-size:18px;flex-shrink:0;transition:color .15s,border-color .15s}
+.nav-ham:hover{color:var(--cream);border-color:var(--amber-border)}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:var(--amber2);letter-spacing:.05em;white-space:nowrap;flex-shrink:0}
+.nav-brand span{color:var(--muted);font-size:14px;font-family:'IBM Plex Sans',sans-serif;font-weight:400;letter-spacing:.02em;margin-left:6px}
+.nav-vehicle-pill{display:none;align-items:center;gap:7px;background:rgba(22,27,34,.9);border:1px solid var(--amber-border);border-radius:2px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--amber2);letter-spacing:.08em;flex-shrink:0}
+.nav-pill-dot{width:7px;height:7px;border-radius:50%;background:#3a8a5a;box-shadow:0 0 6px #3a8a5a}
+/* Admin badge */
+.admin-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(120,80,200,.15);border:1px solid rgba(120,80,200,.3);border-radius:2px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#a78bfa;flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-month{display:flex;align-items:center;gap:8px;background:rgba(22,27,34,.8);border:1px solid rgba(212,144,42,.15);border-radius:2px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--cream);letter-spacing:.04em;white-space:nowrap}
+.nav-month button{color:var(--muted);font-size:14px;padding:0 4px;transition:color .15s}
+.nav-month button:hover{color:var(--amber2)}
+.nav-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(212,144,42,.15);border-radius:2px;color:var(--muted);font-size:15px;transition:all .15s;flex-shrink:0}
+.nav-btn:hover{border-color:var(--amber-border);color:var(--amber2)}
+.nav-user{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap}
+.nav-user strong{color:var(--cream);font-weight:500}
+
+/* ── SIDEBAR ── */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:350}
+.sidebar{width:var(--sb-w);flex-shrink:0;background:rgba(16,20,28,.97);border-right:1px solid var(--amber-border);position:fixed;top:var(--nav-h);left:0;bottom:0;overflow-y:auto;padding:20px 0 24px;z-index:360;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.sb-label{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);padding:0 14px;margin-bottom:8px}
+.veh-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-left:2px solid transparent;cursor:pointer;transition:all .15s}
+.veh-item:hover{background:rgba(212,144,42,.04);border-left-color:rgba(212,144,42,.25)}
+.veh-item.active{background:rgba(212,144,42,.07);border-left-color:var(--amber)}
+.veh-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.veh-dot.on{background:#3a8a5a;box-shadow:0 0 6px #3a8a5a}
+.veh-dot.idle{background:var(--dim)}
+.veh-dot.off{background:var(--red)}
+.veh-plate{font-family:'IBM Plex Sans',monospace;font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--cream);line-height:1}
+.veh-item.active .veh-plate{color:var(--amber2)}
+.veh-meta{font-size:11px;color:var(--dim);margin-top:2px}
+.sb-divider{height:1px;background:var(--amber-border);margin:10px 14px}
+/* Admin driver filter in sidebar */
+.sb-driver-filter{padding:0 14px;margin-bottom:12px}
+.sb-driver-filter select{width:100%;background:rgba(28,35,51,.8);border:1px solid rgba(212,144,42,.2);border-radius:2px;padding:7px 10px;color:var(--cream);font-size:12px;outline:none;cursor:pointer}
+.sb-driver-filter select:focus{border-color:var(--amber-border)}
+
+/* ── MAIN ── */
+.shell{display:flex;padding-top:var(--nav-h);min-height:100vh;position:relative;z-index:1}
+.main{flex:1;margin-left:var(--sb-w);padding:28px 24px 32px;min-width:0}
+
+/* ── VEHICLE HEADER ── */
+.vh-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.vh-plate-wrap{display:inline-flex;align-items:center;gap:12px;background:rgba(22,27,34,.9);border:1px solid var(--amber-border);border-radius:3px;padding:9px 18px;margin-bottom:6px}
+.vh-plate-text{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;letter-spacing:.1em;color:var(--amber2)}
+.vh-type-badge{font-size:10px;font-weight:600;letter-spacing:.1em;background:rgba(212,144,42,.1);color:var(--amber);border:1px solid rgba(212,144,42,.2);padding:3px 9px;border-radius:2px}
+.vh-driver{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.vh-driver strong{color:var(--cream);font-weight:500}
+.vh-status{color:#3a8a5a;margin-left:8px}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat{background:rgba(22,27,34,.85);border:1px solid rgba(212,144,42,.1);border-radius:3px;padding:14px 16px}
+.stat-lbl{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--cream);line-height:1}
+.stat-val.a{color:var(--amber2)}
+.stat-val.d{color:var(--dim)}
+
+/* ── SECTION DIVIDER ── */
+.sec-div{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.sec-div::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--amber-border),transparent)}
+
+/* ── DATE PICKER STRIP ── */
+.date-pick-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(22,27,34,.8);
+  border:1px solid var(--amber-border);border-radius:3px;
+  padding:10px 16px;margin-bottom:20px;flex-wrap:wrap;
+}
+.date-pick-row label{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.date-input{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(212,144,42,.2);border-radius:2px;
+  padding:7px 12px;color:var(--cream);font-size:13px;
+  outline:none;cursor:pointer;
+  color-scheme:dark;
+}
+.date-input:focus{border-color:var(--amber);background:rgba(212,144,42,.05)}
+.btn-today{
+  padding:7px 14px;border-radius:2px;
+  font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  border:1px solid rgba(212,144,42,.25);color:var(--amber);background:rgba(212,144,42,.06);
+  transition:all .15s;
+}
+.btn-today:hover{background:rgba(212,144,42,.12);border-color:var(--amber)}
+
+/* ── CALENDAR ── */
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dow-cell{text-align:center;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:3px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:28px}
+.day{background:rgba(22,27,34,.7);border:1px solid rgba(212,144,42,.08);border-radius:3px;padding:8px 7px 7px;min-height:70px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;overflow:hidden}
+.day:hover{border-color:rgba(212,144,42,.3);background:rgba(22,27,34,.95)}
+.day.sel{border-color:var(--amber);background:rgba(212,144,42,.06);box-shadow:0 0 0 1px rgba(212,144,42,.12)}
+.day.is-ph{background:rgba(28,20,50,.8);border-color:rgba(120,80,200,.25)}
+.day.is-off{background:rgba(13,17,23,.5);border-color:rgba(255,255,255,.05);opacity:.55}
+.day.is-today{border-color:rgba(58,138,90,.5)}
+.day.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
+.day-n{font-family:'IBM Plex Sans',monospace;font-size:13px;font-weight:500;color:var(--dim);display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;line-height:1}
+.day.sel .day-n,.day.is-today .day-n{color:var(--cream)}
+.day-tag{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.day-tag.ph{color:#a78bfa}.day-tag.off{color:var(--dim)}
+.day-dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:6px;height:6px;border-radius:50%}
+.day-cnt{font-size:10px;color:var(--dim);margin-top:4px}
+.day-plus{position:absolute;bottom:5px;right:5px;font-size:11px;color:var(--dim);opacity:0;transition:opacity .15s}
+.day:hover .day-plus{opacity:1}
+
+/* ── DAY PANEL ── */
+.day-panel{background:rgba(22,27,34,.92);border:1px solid var(--amber-border);border-radius:3px;padding:24px;margin-bottom:28px;box-shadow:0 0 40px rgba(212,144,42,.06);animation:slideUp .2s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dp-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--amber2);letter-spacing:.03em;margin-bottom:3px}
+.dp-sub{font-size:12px;color:var(--muted);margin-bottom:18px;letter-spacing:.02em}
+
+/* Admin read-only overlay */
+.admin-readonly-note{
+  display:none;
+  background:rgba(120,80,200,.08);border:1px solid rgba(120,80,200,.2);border-radius:2px;
+  padding:10px 14px;font-size:12px;color:#a78bfa;letter-spacing:.03em;margin-bottom:16px;
+}
+.admin-readonly-note.show{display:block}
+
+.chips-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:rgba(28,35,51,.8);border:1px solid rgba(255,255,255,.07);border-radius:2px;padding:7px 13px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.03em;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.chip:hover{border-color:rgba(212,144,42,.3);color:var(--cream)}
+.chip.on{border-color:var(--amber);background:rgba(212,144,42,.09);color:var(--amber2)}
+.chip:active{transform:scale(.97)}
+.chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.chip-check{font-size:11px;opacity:0;transition:opacity .1s;color:var(--amber)}
+.chip.on .chip-check{opacity:1}
+/* Admin: chips non-interactive */
+.chips-wrap.readonly .chip{pointer-events:none;opacity:.8}
+
+.others-note-wrap{display:none;margin-bottom:14px}
+.others-note-wrap.show{display:block}
+.field-label{display:block;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;outline:none;transition:border-color .2s,background .2s}
+.field-input:focus{border-color:rgba(212,144,42,.4);background:rgba(212,144,42,.04)}
+.field-input::placeholder{color:var(--dim)}
+.field-input:read-only{opacity:.6;cursor:default}
+
+.dp-note{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;height:68px;outline:none;transition:border-color .2s;margin-bottom:16px}
+.dp-note:focus{border-color:rgba(212,144,42,.4)}
+.dp-note::placeholder{color:var(--dim)}
+.dp-note:read-only{opacity:.6;cursor:default}
+
+.dp-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:linear-gradient(135deg,var(--amber) 0%,var(--amber2) 100%);color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;transition:all .15s;box-shadow:0 4px 14px rgba(212,144,42,.22);position:relative;overflow:hidden}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,144,42,.32)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:2px;color:var(--muted);font-size:12px;font-weight:500;letter-spacing:.06em;transition:all .15s}
+.btn-ghost:hover{border-color:rgba(212,144,42,.25);color:var(--cream)}
+.btn-danger{display:inline-flex;align-items:center;gap:5px;padding:10px 16px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--red);font-size:12px;font-weight:500;transition:all .15s;opacity:.7}
+.btn-danger:hover{border-color:rgba(224,82,82,.3);background:rgba(224,82,82,.06);opacity:1}
+.tag-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.btn-tag{padding:8px 14px;border-radius:2px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);color:var(--dim);background:rgba(28,35,51,.6);transition:all .15s}
+.btn-tag.ph:hover,.btn-tag.ph.on{background:rgba(120,80,200,.12);color:#a78bfa;border-color:rgba(120,80,200,.3)}
+.btn-tag.off:hover,.btn-tag.off.on{background:rgba(224,82,82,.08);color:var(--red);border-color:rgba(224,82,82,.25)}
+.btn-tag:disabled{opacity:.4;cursor:default;pointer-events:none}
+
+.save-ring{width:16px;height:16px;border:2px solid rgba(13,17,23,.25);border-top-color:var(--ink);border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-primary.loading .save-ring{display:block}
+.btn-primary.loading .btn-label{display:none}
+
+/* ── ADMIN ALL-LOGS TABLE ── */
+.admin-log-table-wrap{overflow-x:auto;margin-bottom:16px}
+.admin-log-table{width:100%;border-collapse:collapse;font-size:12px;letter-spacing:.02em}
+.admin-log-table th{background:rgba(120,80,200,.1);border:1px solid rgba(120,80,200,.2);padding:9px 12px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;text-align:left;white-space:nowrap}
+.admin-log-table td{border:1px solid rgba(255,255,255,.05);padding:8px 12px;color:var(--cream);vertical-align:top}
+.admin-log-table tr:hover td{background:rgba(120,80,200,.04)}
+.admin-log-table td.muted{color:var(--muted)}
+
+/* ── EXPORT TABLE ── */
+.export-section{display:none}
+.export-section.show{display:block}
+.exp-table-wrap{overflow-x:auto;margin-bottom:16px}
+.exp-table{width:100%;border-collapse:collapse;font-size:12px;letter-spacing:.02em}
+.exp-table th{background:rgba(212,144,42,.08);border:1px solid var(--amber-border);padding:9px 12px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:left;white-space:nowrap}
+.exp-table td{border:1px solid rgba(255,255,255,.05);padding:8px 12px;color:var(--cream);vertical-align:top}
+.exp-table tr:hover td{background:rgba(212,144,42,.03)}
+.exp-table td.muted{color:var(--muted)}
+.badge-ph{background:rgba(120,80,200,.15);color:#a78bfa;border:1px solid rgba(120,80,200,.25);padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.08em}
+.badge-off{background:rgba(60,60,60,.3);color:var(--muted);border:1px solid rgba(255,255,255,.08);padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.08em}
+
+/* ── BOTTOM NAV ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bnav-h);background:rgba(13,17,23,.96);backdrop-filter:blur(20px);border-top:1px solid var(--amber-border);z-index:400;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-inner{display:flex;height:100%;align-items:center;justify-content:space-around;padding:0 8px}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 16px;border-radius:2px;color:var(--dim);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.bnav-item.active{color:var(--amber2)}
+.bnav-icon{font-size:18px;line-height:1}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(22,27,34,.97);border:1px solid var(--amber-border);border-radius:2px;padding:10px 22px;font-size:12px;font-weight:500;letter-spacing:.04em;color:var(--cream);box-shadow:0 4px 24px rgba(0,0,0,.5);z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── LOADING ── */
+.loading-overlay{position:fixed;inset:0;z-index:900;background:rgba(13,17,23,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loading-overlay.hide{display:none}
+.ld-ring{width:36px;height:36px;border:3px solid rgba(212,144,42,.15);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite}
+.ld-text{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+
+/* ── CONFIRM ── */
+.confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+.confirm-wrap.show{display:flex}
+.confirm-card{background:rgba(22,27,34,.98);border:1px solid var(--amber-border);border-radius:3px;padding:28px;max-width:360px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,.6);animation:slideUp .2s ease both}
+.confirm-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--amber2);margin-bottom:8px}
+.confirm-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px}
+.confirm-btns{display:flex;gap:10px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){.main{padding:22px 18px 28px}}
+@media(max-width:720px){
+  :root{--nav-h:52px;--sb-w:250px}
+  .nav-ham{display:flex}
+  .nav-vehicle-pill{display:flex}
+  .nav-month{font-size:11px;padding:5px 10px}
+  .nav-user{display:none}
+  .nav-btn.hide-mob{display:none}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay{display:block;opacity:0;transition:opacity .28s;pointer-events:none}
+  .sb-overlay.show{opacity:1;pointer-events:all}
+  .main{margin-left:0;padding:14px 12px 80px}
+  .vh-bar{display:none}
+  .stats{grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
+  .stat{padding:11px 12px}
+  .stat-val{font-size:22px}
+  .stat-lbl{font-size:9px}
+  .cal-grid,.cal-dow{gap:3px}
+  .day{min-height:58px;padding:6px 5px 5px;border-radius:2px}
+  .day-n{font-size:11px;margin-bottom:3px}
+  .dot{width:5px;height:5px}
+  .day-cnt{display:none}
+  .day-panel{padding:16px}
+  .dp-title{font-size:17px}
+  .chip{padding:8px 12px;font-size:13px}
+  .bnav{display:flex}
+  .toast{bottom:72px}
+  .date-pick-row{padding:8px 12px;gap:8px}
+}
+@media(max-width:360px){
+  .chip{padding:7px 10px;font-size:12px}
+  .cal-dow-cell{font-size:9px;letter-spacing:.06em}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-base"></div>
+<div class="bg-dots"></div>
+<div class="bg-glow"></div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="ld-ring"></div>
+  <div class="ld-text">Loading</div>
+</div>
+
+<!-- TOPNAV -->
+<nav class="topnav">
+  <button class="nav-ham" id="sbToggle">☰</button>
+  <div class="nav-brand">Charan Logistics<span id="navSubtitle">Driver Log</span></div>
+  <div class="admin-badge" id="adminBadge" style="display:none">⚙ Admin</div>
+  <div class="nav-vehicle-pill" id="navPill">
+    <div class="nav-pill-dot"></div>
+    <span id="navPillPlate">—</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-month">
+    <button onclick="changeMonth(-1)">◀</button>
+    <span id="monthLabel">—</span>
+    <button onclick="changeMonth(1)">▶</button>
+  </div>
+  <button class="nav-btn hide-mob" id="exportNavBtn" title="Export">📤</button>
+  <div class="nav-user">
+    <span>Welcome, <strong id="navUserName">—</strong></span>
+    <button class="nav-btn" onclick="doLogout()" title="Sign out">🚪</button>
+  </div>
+</nav>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div style="padding:0 14px">
+    <!-- Admin: driver filter -->
+    <div class="sb-driver-filter" id="adminDriverFilter" style="display:none">
+      <div class="sb-label" style="padding:0;margin-bottom:6px">Filter by Driver</div>
+      <select id="driverFilterSelect" onchange="onDriverFilterChange()">
+        <option value="">All Drivers</option>
+      </select>
+    </div>
+    <div class="sb-label" style="margin-bottom:12px" id="vehListLabel">My Vehicles</div>
+    <div id="vehList"></div>
+  </div>
+  <div class="sb-divider"></div>
+  <div style="padding:8px 14px">
+    <button class="nav-btn" style="width:100%;justify-content:center;gap:8px;font-size:12px;letter-spacing:.06em;color:var(--muted)" onclick="doLogout()">
+      Sign Out 🚪
+    </button>
+  </div>
+</aside>
+
+<!-- SHELL -->
+<div class="shell" style="position:relative;z-index:1">
+<main class="main" id="mainArea">
+
+  <!-- Vehicle header (desktop) -->
+  <div class="vh-bar" id="vehHeader">
+    <div>
+      <div class="vh-plate-wrap">
+        <span class="vh-plate-text" id="hdrPlate">—</span>
+        <span class="vh-type-badge" id="hdrType">—</span>
+      </div>
+      <div class="vh-driver">
+        Driver: <strong id="hdrDriver">—</strong>
+        <span class="vh-status" id="hdrStatus">● Active</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="statsRow">
+    <div class="stat"><div class="stat-lbl">Working Days</div><div class="stat-val a" id="statWork">—</div></div>
+    <div class="stat"><div class="stat-lbl">Jobs Logged</div><div class="stat-val" id="statJobs">—</div></div>
+    <div class="stat"><div class="stat-lbl">OFF / PH Days</div><div class="stat-val d" id="statOff">—</div></div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="sec-div" id="calSec">Calendar — <span id="calMonthLabel">—</span></div>
+  <div id="calSection">
+    <div class="cal-dow" id="calDow"></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- Date picker strip -->
+  <div class="date-pick-row" id="datePickRow">
+    <label for="datePickInput">Jump to date</label>
+    <input type="date" class="date-input" id="datePickInput" onchange="onDatePickChange()"/>
+    <button class="btn-today" onclick="jumpToToday()">Today</button>
+  </div>
+
+  <!-- Day panel -->
+  <div class="sec-div" id="daySecDiv">Day Entry</div>
+  <div class="day-panel" id="dayPanel">
+    <div class="dp-title" id="dpTitle">Select a day above</div>
+    <div class="dp-sub" id="dpSub">Tap any date on the calendar or use the date picker.</div>
+
+
+
+    <div class="chips-wrap" id="chipsWrap"></div>
+
+    <div class="others-note-wrap" id="othersNoteWrap">
+      <label class="field-label">Others — specify client name</label>
+      <input class="field-input" id="othersNoteInput" placeholder="e.g. Bullion Exchange, Tuas client…"/>
+    </div>
+
+    <label class="field-label">Day Notes</label>
+    <textarea class="dp-note" id="dpNotes" placeholder="e.g. 23 cartons, helper used, Tuas route…"></textarea>
+
+    <div class="dp-actions" id="dpActions">
+      <button class="btn-primary" id="saveBtn" onclick="saveLog()">
+        <span class="btn-label">Save</span>
+        <span class="save-ring"></span>
+      </button>
+      <button class="btn-ghost" id="clearBtn" onclick="clearPanel()">Clear</button>
+      <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()" style="display:none">🗑 Delete</button>
+      <div class="tag-btns">
+        <button class="btn-tag ph" id="phBtn" onclick="toggleTag('ph')">PH</button>
+        <button class="btn-tag off" id="offBtn" onclick="toggleTag('off')">OFF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin: all logs table for month -->
+  <div class="sec-div" id="adminLogsSec" style="display:none">All Logs — <span id="adminLogsMonthLabel">—</span></div>
+  <div id="adminLogsSection" style="display:none">
+    <div class="admin-log-table-wrap">
+      <table class="admin-log-table" id="adminLogsTable">
+        <thead>
+          <tr>
+            <th>Date</th><th>Day</th><th>Vehicle</th><th>Driver</th>
+            <th>Clients</th><th>Notes</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="adminLogsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Export section -->
+  <div class="sec-div" id="expSecDiv" style="display:none">Export — <span id="expMonthLabel">—</span></div>
+  <div class="export-section" id="exportSection">
+    <div class="exp-table-wrap">
+      <table class="exp-table" id="expTable">
+        <thead>
+          <tr>
+            <th>Date</th><th>Day</th><th>Vehicle</th>
+            <th>Clients Worked</th><th>Notes</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="expTbody"></tbody>
+      </table>
+    </div>
+    <button class="btn-primary" onclick="downloadCSV()" style="margin-bottom:8px">⬇ Download CSV</button>
+    <button class="btn-ghost" onclick="closeExport()">Close</button>
+  </div>
+
+</main>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <div class="bnav-inner">
+    <button class="bnav-item active" id="bnavLog" onclick="bnavClick('log',this)">
+      <div class="bnav-icon">📅</div>Log
+    </button>
+    <button class="bnav-item" id="bnavVeh" onclick="bnavClick('veh',this);document.getElementById('sbToggle').click()">
+      <div class="bnav-icon">🚛</div>Vehicles
+    </button>
+    <button class="bnav-item" id="bnavExp" onclick="bnavClick('exp',this);openExport()">
+      <div class="bnav-icon">📤</div>Export
+    </button>
+    <button class="bnav-item" id="bnavOut" onclick="doLogout()">
+      <div class="bnav-icon">🚪</div>Sign Out
+    </button>
+  </div>
+</nav>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-wrap" id="confirmWrap">
+  <div class="confirm-card">
+    <div class="confirm-title">Delete Log Entry?</div>
+    <div class="confirm-msg" id="confirmMsg">This will permanently remove the work log for this date.</div>
+    <div class="confirm-btns">
+      <button class="btn-danger" style="border:1px solid rgba(224,82,82,.3);background:rgba(224,82,82,.08);opacity:1" onclick="doDelete()">Yes, Delete</button>
+      <button class="btn-ghost" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+
+const SUPABASE_URL     = "%%SUPABASE_URL%%";
+const SUPABASE_ANON_KEY = "%%SUPABASE_ANON_KEY%%";
+
+///const SUPABASE_URL      = "https://tcqtwakxszryzrfxoyze.supabase.co";
+///const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXR3YWt4c3pyeXpyZnhveXplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzQzNzUsImV4cCI6MjA4OTE1MDM3NX0.uMYxktFu0E04WrM8VGsXng7WkuO6ACUBIAvoceylXS0";
+
+// ── HOW ADMIN ROLE IS DETECTED ────────────────────────────
+// Store role in Supabase auth user metadata.
+// In Supabase dashboard → Authentication → Users → Edit user → app_metadata:
+//   { "role": "admin" }
+// Drivers have no role set (or role: "driver")
+// ─────────────────────────────────────────────────────────
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── STATE ─────────────────────────────────────────────────
+let currentUser   = null;
+let isAdmin       = false;
+let allVehicles   = [];   // all vehicles (admin) or assigned (driver)
+let clientsList   = [];   // all active clients
+let activeVeh     = null;
+let logsCache     = {};   // { 'YYYY-MM-DD': rowObj } for active vehicle
+let selectedDate  = null; // 'YYYY-MM-DD'
+let currentTag    = '';
+let selectedClients = new Set();
+let existingLogId   = null;
+// Admin extras
+let allDriverUsers  = [];  // [{ user_id, driver_name, plate }]
+let filterUserId    = '';  // '' = all drivers
+let adminAllLogs    = [];  // raw rows for admin month view
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let viewYear, viewMonth;
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.replace('./login.html'); return; }
+  currentUser = session.user;
+
+  // Detect admin via app_metadata.role (set by admin in Supabase dashboard)
+  isAdmin = (currentUser.app_metadata?.role === 'admin');
+
+  const now = new Date();
+  viewYear  = now.getFullYear();
+  viewMonth = now.getMonth();
+
+  await loadData();
+  hideLoading();
+  applyRoleUI();
+
+  // Set date picker to today
+  document.getElementById('datePickInput').value = todayStr();
+  selectedDate = todayStr();
+
+  if (allVehicles.length > 0) {
+    await selectVehicle(allVehicles[0]);
+  } else {
+    toast('⚠ No vehicles assigned to your account.');
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// LOAD DATA
+// ══════════════════════════════════════════════════════════
+async function loadData() {
+  // DB-driven access control via driver_vehicles:
+  //   NULL vehicle_id row  → user sees ALL vehicles (admin/manager)
+  //   specific UUID row(s) → user sees only those vehicles (driver)
+  //   multiple UUID rows   → driver with 2+ vehicles
+  const { data: dvRows, error: dvErr } = await sb
+    .from('driver_vehicles')
+    .select('vehicle_id')
+    .eq('user_id', currentUser.id);
+  if (dvErr) console.error('driver_vehicles error', dvErr);
+
+  const rows = dvRows || [];
+  const hasAllAccess = rows.some(r => r.vehicle_id === null);
+
+  if (hasAllAccess) {
+    // NULL entry = all vehicles access
+    isAdmin = true;
+    const { data: vRows, error: vErr } = await sb
+      .from('vehiclelist')
+      .select('*')
+      .order('plate');
+    if (vErr) console.error('vehicles error', vErr);
+    allVehicles = vRows || [];
+  } else {
+    // Specific vehicle IDs only
+    const ids = rows.map(r => r.vehicle_id).filter(Boolean);
+    if (ids.length === 0) {
+      allVehicles = [];
+    } else {
+      const { data: vRows, error: vErr } = await sb
+        .from('vehiclelist')
+        .select('*')
+        .in('id', ids)
+        .order('plate');
+      if (vErr) console.error('vehicles error', vErr);
+      allVehicles = vRows || [];
+    }
+  }
+
+  // Load all active clients
+  const { data: cRows, error: cErr } = await sb
+    .from('clientslist')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order');
+  if (cErr) console.error('clients error', cErr);
+  clientsList = cRows || [];
+
+  // Nav user name
+  const displayName = allVehicles[0]?.driver_name || currentUser.email?.split('@')[0] || 'User';
+  document.getElementById('navUserName').textContent = displayName;
+
+  renderVehList();
+}
+
+// ══════════════════════════════════════════════════════════
+// ROLE UI
+// ══════════════════════════════════════════════════════════
+function applyRoleUI() {
+  if (isAdmin) {
+    document.getElementById('adminBadge').style.display = 'inline-flex';
+    document.getElementById('navSubtitle').textContent  = 'Admin';
+    document.getElementById('vehListLabel').textContent = 'All Vehicles';
+    document.getElementById('adminLogsSec').style.display = '';
+    document.getElementById('adminLogsSection').style.display = 'block';
+  }
+  // Everyone (admin + driver) can fully edit logs — no read-only lockdown
+}
+
+// ══════════════════════════════════════════════════════════
+// VEHICLE LIST
+// ══════════════════════════════════════════════════════════
+function renderVehList() {
+  const el  = document.getElementById('vehList');
+  el.innerHTML = '';
+  const list = allVehicles; // same for both admin and driver — assigned vehicles only
+  list.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'veh-item' + (activeVeh?.id === v.id ? ' active' : '');
+    div.innerHTML = `
+      <div class="veh-dot ${v.status === 'active' ? 'on' : v.status === 'idle' ? 'idle' : 'off'}"></div>
+      <div>
+        <div class="veh-plate">${v.plate}</div>
+        <div class="veh-meta">${v.type}${v.driver_name ? ' · ' + v.driver_name : ''}</div>
+      </div>`;
+    div.onclick = () => { selectVehicle(v); closeSidebar(); };
+    el.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// SELECT VEHICLE — FIX: properly awaits and updates all UI
+// ══════════════════════════════════════════════════════════
+async function selectVehicle(v) {
+  if (!v) return;
+  activeVeh = v;
+  renderVehList(); // re-render to update active highlight
+
+  // Update headers
+  document.getElementById('hdrPlate').textContent    = v.plate;
+  document.getElementById('hdrType').textContent     = v.type.toUpperCase();
+  document.getElementById('hdrDriver').textContent   = v.driver_name || '—';
+  document.getElementById('hdrStatus').textContent   = '● ' + (v.status || 'active');
+  document.getElementById('navPillPlate').textContent = v.plate;
+  document.getElementById('vehHeader').style.display  = '';
+
+  await loadMonthLogs();
+  renderCalendar();
+
+  // Keep currently selected date or default to today
+  if (!selectedDate) selectedDate = todayStr();
+  renderDayPanel();
+
+  // Admin: also render all logs table
+  if (isAdmin) await renderAdminLogsTable();
+}
+
+// ══════════════════════════════════════════════════════════
+// LOAD LOGS
+// ══════════════════════════════════════════════════════════
+async function loadMonthLogs() {
+  logsCache = {};
+  if (!activeVeh) return;
+
+  const y = viewYear, m = viewMonth;
+  const from = `${y}-${pad(m+1)}-01`;
+  const to   = `${y}-${pad(m+1)}-${pad(daysInMonth(y, m))}`;
+
+  let query = sb
+    .from('work_logs')
+    .select('id, log_date, clients_worked, others_note, notes, tag, user_id, vehicle_id')
+    .eq('vehicle_id', activeVeh.id)
+    .gte('log_date', from)
+    .lte('log_date', to);
+
+  // Drivers only see their own (RLS handles it too, this is just explicit)
+  if (!isAdmin) {
+    query = query.eq('user_id', currentUser.id);
+  }
+
+  const { data, error } = await query;
+  if (error) { console.error('loadMonthLogs error:', error); toast('⚠ Error loading logs: ' + error.message); return; }
+
+  (data || []).forEach(row => {
+    logsCache[row.log_date] = row;
+  });
+
+  updateStats();
+}
+
+function updateStats() {
+  const logs    = Object.values(logsCache);
+  const working = logs.filter(l => l.tag === '').length;
+  const offPh   = logs.filter(l => l.tag === 'ph' || l.tag === 'off').length;
+  const jobs    = logs.reduce((s, l) => s + (l.clients_worked?.length || 0), 0);
+  document.getElementById('statWork').textContent = working;
+  document.getElementById('statJobs').textContent = jobs;
+  document.getElementById('statOff').textContent  = offPh;
+}
+
+// ══════════════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════════════
+function renderCalendar() {
+  const label = `${MONTHS[viewMonth]} ${viewYear}`;
+  document.getElementById('monthLabel').textContent    = label;
+  document.getElementById('calMonthLabel').textContent = label;
+  if (isAdmin) document.getElementById('adminLogsMonthLabel').textContent = label;
+
+  const dow = document.getElementById('calDow');
+  dow.innerHTML = '';
+  DAYS.forEach(d => { const c = document.createElement('div'); c.className = 'cal-dow-cell'; c.textContent = d; dow.appendChild(c); });
+
+  const grid  = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  const today = todayStr();
+  const first = new Date(viewYear, viewMonth, 1).getDay();
+
+  for (let i = 0; i < first; i++) {
+    const e = document.createElement('div'); e.className = 'day empty'; grid.appendChild(e);
+  }
+
+  const total = daysInMonth(viewYear, viewMonth);
+  for (let d = 1; d <= total; d++) {
+    const ds  = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
+    const log = logsCache[ds];
+    const div = document.createElement('div');
+    let cls = 'day';
+    if (ds === selectedDate) cls += ' sel';
+    if (ds === today)        cls += ' is-today';
+    if (log?.tag === 'ph')   cls += ' is-ph';
+    if (log?.tag === 'off')  cls += ' is-off';
+    div.className = cls;
+    div.dataset.date = ds;
+    div.onclick = () => selectDate(ds);
+
+    let inner = `<div class="day-n">${d}`;
+    if (log?.tag === 'ph')       inner += `<span class="day-tag ph">PH</span>`;
+    else if (log?.tag === 'off') inner += `<span class="day-tag off">OFF</span>`;
+    inner += `</div>`;
+
+    const cw = log?.clients_worked || [];
+    if (cw.length) {
+      inner += `<div class="day-dots">`;
+      cw.slice(0,6).forEach(cid => {
+        const cl = clientsList.find(c => c.id === cid);
+        if (cl) inner += `<div class="dot" style="background:${cl.color}"></div>`;
+      });
+      inner += `</div>`;
+      inner += `<div class="day-cnt">${cw.length} client${cw.length > 1 ? 's' : ''}</div>`;
+    }
+    inner += `<div class="day-plus">＋</div>`;
+    div.innerHTML = inner;
+    grid.appendChild(div);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// DATE SELECTION — date picker + calendar cells
+// ══════════════════════════════════════════════════════════
+function selectDate(ds) {
+  selectedDate = ds;
+  document.getElementById('datePickInput').value = ds;  // sync date picker
+  renderCalendar();
+  renderDayPanel();
+  if (window.innerWidth <= 720) {
+    setTimeout(() => document.getElementById('dayPanel').scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+  }
+}
+
+function onDatePickChange() {
+  const val = document.getElementById('datePickInput').value;
+  if (!val) return;
+  const [y, m] = val.split('-').map(Number);
+  // If the date is in a different month, navigate there first
+  if (y !== viewYear || (m - 1) !== viewMonth) {
+    viewYear  = y;
+    viewMonth = m - 1;
+    loadMonthLogs().then(() => {
+      selectedDate = val;
+      renderCalendar();
+      renderDayPanel();
+      if (isAdmin) renderAdminLogsTable();
+    });
+  } else {
+    selectDate(val);
+  }
+}
+
+function jumpToToday() {
+  const t = todayStr();
+  const [y, m] = t.split('-').map(Number);
+  viewYear  = y;
+  viewMonth = m - 1;
+  document.getElementById('datePickInput').value = t;
+  loadMonthLogs().then(() => {
+    selectedDate = t;
+    renderCalendar();
+    renderDayPanel();
+    if (isAdmin) renderAdminLogsTable();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// DAY PANEL
+// ══════════════════════════════════════════════════════════
+function renderDayPanel() {
+  if (!selectedDate) return;
+
+  const [y, m, d] = selectedDate.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  document.getElementById('dpTitle').textContent =
+    `${DAYS[date.getDay()]}, ${d} ${MONTHS[m - 1]} ${y}`;
+
+  const log = logsCache[selectedDate];
+  existingLogId    = log?.id    || null;
+  selectedClients  = new Set(log?.clients_worked || []);
+  currentTag       = log?.tag   || '';
+
+  document.getElementById('dpNotes').value         = log?.notes       || '';
+  document.getElementById('othersNoteInput').value = log?.others_note || '';
+
+  const today = todayStr();
+  let subMsg = 'Tap any date on the calendar or use the date picker.';
+  if (selectedDate === today)    subMsg = 'Today — add or update your work log.';
+  else if (selectedDate < today) subMsg = 'Past date — you can still add or edit this entry.';
+  else                           subMsg = 'Future date — log in advance if needed.';
+  document.getElementById('dpSub').textContent = subMsg;
+
+  document.getElementById('phBtn').classList.toggle('on', currentTag === 'ph');
+  document.getElementById('offBtn').classList.toggle('on', currentTag === 'off');
+
+  // Delete button — show for anyone when a log exists
+  document.getElementById('deleteBtn').style.display =
+    existingLogId ? 'inline-flex' : 'none';
+
+  renderChips();
+}
+
+function renderChips() {
+  const wrap = document.getElementById('chipsWrap');
+  wrap.innerHTML = '';
+  clientsList.forEach(c => {
+    const on  = selectedClients.has(c.id);
+    const btn = document.createElement('button');
+    btn.className = 'chip' + (on ? ' on' : '');
+    btn.innerHTML = `
+      <div class="chip-dot" style="background:${c.color}"></div>
+      ${c.name}
+      ${c.note && c.name !== 'Others' ? `<span style="font-size:10px;color:var(--dim);margin-left:2px">(${c.note})</span>` : ''}
+      <span class="chip-check">✓</span>`;
+    btn.onclick = () => {
+      if (selectedClients.has(c.id)) selectedClients.delete(c.id);
+      else selectedClients.add(c.id);
+      renderChips();
+      toggleOthersNote();
+    };
+    wrap.appendChild(btn);
+  });
+  toggleOthersNote();
+}
+
+function toggleOthersNote() {
+  const othersId = clientsList.find(c => c.name === 'Others')?.id;
+  const show = othersId && selectedClients.has(othersId);
+  document.getElementById('othersNoteWrap').classList.toggle('show', !!show);
+}
+
+function toggleTag(tag) {
+  currentTag = currentTag === tag ? '' : tag;
+  document.getElementById('phBtn').classList.toggle('on', currentTag === 'ph');
+  document.getElementById('offBtn').classList.toggle('on', currentTag === 'off');
+}
+
+// ══════════════════════════════════════════════════════════
+// SAVE LOG — FIX: proper upsert with correct conflict target
+// ══════════════════════════════════════════════════════════
+async function saveLog() {
+  if (!activeVeh || !selectedDate) { toast('⚠ No vehicle or date selected'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const payload = {
+    vehicle_id:     activeVeh.id,
+    user_id:        currentUser.id,
+    log_date:       selectedDate,
+    clients_worked: [...selectedClients],
+    others_note:    document.getElementById('othersNoteInput').value.trim(),
+    notes:          document.getElementById('dpNotes').value.trim(),
+    tag:            currentTag,
+  };
+
+  let error;
+
+  if (existingLogId) {
+    // UPDATE existing row by id
+    const res = await sb
+      .from('work_logs')
+      .update({
+        clients_worked: payload.clients_worked,
+        others_note:    payload.others_note,
+        notes:          payload.notes,
+        tag:            payload.tag,
+      })
+      .eq('id', existingLogId);
+    error = res.error;
+  } else {
+    // INSERT new row — upsert guards against race conditions
+    const res = await sb
+      .from('work_logs')
+      .insert(payload);
+    error = res.error;
+
+    // If unique constraint hit (duplicate date+vehicle), fall back to update
+    if (error && error.code === '23505') {
+      // Fetch existing row first
+      const { data: existing } = await sb
+        .from('work_logs')
+        .select('id')
+        .eq('vehicle_id', activeVeh.id)
+        .eq('log_date', selectedDate)
+        .single();
+      if (existing) {
+        existingLogId = existing.id;
+        const res2 = await sb
+          .from('work_logs')
+          .update({
+            clients_worked: payload.clients_worked,
+            others_note:    payload.others_note,
+            notes:          payload.notes,
+            tag:            payload.tag,
+          })
+          .eq('id', existing.id);
+        error = res2.error;
+      }
+    }
+  }
+
+  btn.classList.remove('loading'); btn.disabled = false;
+
+  if (error) {
+    console.error('save error:', error);
+    toast('⚠ Error: ' + error.message);
+    return;
+  }
+
+  toast('✓ Log saved');
+  await loadMonthLogs();
+  renderCalendar();
+  renderDayPanel();
+}
+
+// ══════════════════════════════════════════════════════════
+// CLEAR / DELETE
+// ══════════════════════════════════════════════════════════
+function clearPanel() {
+  selectedClients = new Set();
+  currentTag = '';
+  document.getElementById('dpNotes').value = '';
+  document.getElementById('othersNoteInput').value = '';
+  renderChips();
+  document.getElementById('phBtn').classList.remove('on');
+  document.getElementById('offBtn').classList.remove('on');
+}
+
+function confirmDelete() {
+  const [y, m, d] = selectedDate.split('-').map(Number);
+  document.getElementById('confirmMsg').textContent =
+    `This will permanently remove the work log for ${d} ${MONTHS[m-1]} ${y}. This cannot be undone.`;
+  document.getElementById('confirmWrap').classList.add('show');
+}
+function closeConfirm() { document.getElementById('confirmWrap').classList.remove('show'); }
+
+async function doDelete() {
+  if (!existingLogId) return;
+  closeConfirm();
+  const { error } = await sb
+    .from('work_logs')
+    .delete()
+    .eq('id', existingLogId);
+  if (error) { toast('⚠ Error: ' + error.message); return; }
+  toast('🗑 Entry deleted');
+  existingLogId = null;
+  await loadMonthLogs();
+  renderCalendar();
+  renderDayPanel();
+}
+
+// ══════════════════════════════════════════════════════════
+// ADMIN ALL-LOGS TABLE
+// ══════════════════════════════════════════════════════════
+async function renderAdminLogsTable() {
+  if (!isAdmin) return;
+  const label = `${MONTHS[viewMonth]} ${viewYear}`;
+  document.getElementById('adminLogsMonthLabel').textContent = label;
+
+  const y = viewYear, m = viewMonth;
+  const from = `${y}-${pad(m+1)}-01`;
+  const to   = `${y}-${pad(m+1)}-${pad(daysInMonth(y, m))}`;
+
+  // Admin RLS policy must allow this — requires service key OR permissive policy
+  // FIX: add an admin policy (see SQL below) or use service key in admin panel
+  const { data, error } = await sb
+    .from('work_logs')
+    .select('id, log_date, clients_worked, others_note, notes, tag, user_id, vehicle_id')
+    .gte('log_date', from)
+    .lte('log_date', to)
+    .order('log_date');
+
+  if (error) { console.error('admin logs error:', error); return; }
+  adminAllLogs = data || [];
+
+  const tbody = document.getElementById('adminLogsTbody');
+  tbody.innerHTML = '';
+
+  if (!adminAllLogs.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:20px">No logs found for this month.</td></tr>`;
+    return;
+  }
+
+  adminAllLogs.forEach(log => {
+    const veh    = allVehicles.find(v => v.id === log.vehicle_id);
+    const [y,m,d] = log.log_date.split('-').map(Number);
+    const date   = new Date(y, m-1, d);
+    const cNames = (log.clients_worked || [])
+      .map(cid => clientsList.find(c => c.id === cid)?.name || '')
+      .filter(Boolean)
+      .join(', ');
+
+    let statusCell = '—';
+    if (log.tag === 'ph')        statusCell = `<span class="badge-ph">PH</span>`;
+    else if (log.tag === 'off')  statusCell = `<span class="badge-off">OFF</span>`;
+    else                         statusCell = `<span style="color:var(--green);font-size:11px">● Logged</span>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-family:monospace">${log.log_date}</td>
+      <td class="muted">${DAYS[date.getDay()]}</td>
+      <td style="font-family:monospace;letter-spacing:.05em">${veh?.plate || '—'}</td>
+      <td class="muted">${veh?.driver_name || '—'}</td>
+      <td>${cNames || '<span style="color:var(--dim)">—</span>'}</td>
+      <td class="muted">${log.notes || '—'}</td>
+      <td>${statusCell}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// MONTH NAVIGATION
+// ══════════════════════════════════════════════════════════
+async function changeMonth(dir) {
+  viewMonth += dir;
+  if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
+  await loadMonthLogs();
+  renderCalendar();
+  if (isAdmin) await renderAdminLogsTable();
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════
+document.getElementById('exportNavBtn').onclick = openExport;
+
+async function openExport() {
+  const label = `${MONTHS[viewMonth]} ${viewYear}`;
+  document.getElementById('expMonthLabel').textContent = label;
+  document.getElementById('expSecDiv').style.display = '';
+  document.getElementById('exportSection').classList.add('show');
+
+  const tbody = document.getElementById('expTbody');
+  tbody.innerHTML = '';
+
+  const total = daysInMonth(viewYear, viewMonth);
+  for (let d = 1; d <= total; d++) {
+    const ds   = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
+    const log  = logsCache[ds];
+    const date = new Date(viewYear, viewMonth, d);
+    const tr   = document.createElement('tr');
+
+    const clientNames = (log?.clients_worked || []).map(cid => {
+      const cl = clientsList.find(c => c.id === cid);
+      return cl ? cl.name : '';
+    }).filter(Boolean);
+
+    const othersLabel = clientNames.includes('Others') && log?.others_note
+      ? clientNames.map(n => n === 'Others' ? `Others (${log.others_note})` : n)
+      : clientNames;
+
+    let statusCell = '—';
+    if (log?.tag === 'ph')       statusCell = `<span class="badge-ph">PH</span>`;
+    else if (log?.tag === 'off') statusCell = `<span class="badge-off">OFF</span>`;
+    else if (log)                statusCell = `<span style="color:var(--green);font-size:11px">● Logged</span>`;
+
+    tr.innerHTML = `
+      <td style="white-space:nowrap">${ds}</td>
+      <td class="muted">${DAYS[date.getDay()]}</td>
+      <td style="font-family:monospace;letter-spacing:.05em">${activeVeh?.plate || ''}</td>
+      <td>${othersLabel.length ? othersLabel.join(', ') : '<span class="muted">—</span>'}</td>
+      <td class="muted">${log?.notes || '—'}</td>
+      <td>${statusCell}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  setTimeout(() => document.getElementById('expSecDiv').scrollIntoView({ behavior:'smooth' }), 80);
+}
+
+function closeExport() {
+  document.getElementById('exportSection').classList.remove('show');
+  document.getElementById('expSecDiv').style.display = 'none';
+}
+
+function downloadCSV() {
+  const label = `${MONTHS[viewMonth]}_${viewYear}_${activeVeh?.plate || 'log'}`;
+  let csv = 'Date,Day,Vehicle,Driver,Clients Worked,Others Note,Notes,Tag\n';
+  const total = daysInMonth(viewYear, viewMonth);
+  for (let d = 1; d <= total; d++) {
+    const ds   = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
+    const log  = logsCache[ds];
+    const date = new Date(viewYear, viewMonth, d);
+    const cNames = (log?.clients_worked || [])
+      .map(cid => clientsList.find(c => c.id === cid)?.name || '').filter(Boolean).join('; ');
+    csv += [
+      ds,
+      DAYS[date.getDay()],
+      activeVeh?.plate || '',
+      activeVeh?.driver_name || '',
+      `"${cNames}"`,
+      `"${log?.others_note || ''}"`,
+      `"${(log?.notes || '').replace(/"/g,'""')}"`,
+      log?.tag || ''
+    ].join(',') + '\n';
+  }
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `${label}.csv`;
+  a.click();
+  toast('⬇ CSV downloaded');
+}
+
+// ══════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════
+document.getElementById('sbToggle').onclick = () => {
+  const sidebar = document.getElementById('sidebar');
+  const ov      = document.getElementById('sbOverlay');
+  const open    = sidebar.classList.toggle('open');
+  ov.classList.toggle('show', open);
+};
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
+function bnavClick(tab, el) {
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGOUT
+// ══════════════════════════════════════════════════════════
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.replace('./login.html');
+}
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function todayStr() {
+  const n = new Date();
+  return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`;
+}
+function pad(n)            { return String(n).padStart(2,'0'); }
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
+function hideLoading()     { document.getElementById('loadingOverlay').classList.add('hide'); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
