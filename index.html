@@ -755,7 +755,7 @@ async function loadMonthEntries() {
     .lte('log_date', to)
     .order('created_at');
 
-  if (!isAdmin) query = query.eq('user_id', currentUser.id);
+  //if (!isAdmin) query = query.eq('user_id', currentUser.id);
 
   const { data, error } = await query;
   if (error) { console.error('loadMonthEntries:', error); toast('⚠ Error loading entries'); return; }
