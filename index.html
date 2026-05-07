@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Charan Logistics — Driver Log</title>
+<title>Charan Logistics — Client Log</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -42,7 +42,6 @@ textarea{resize:none}
 .nav-brand span{color:var(--muted);font-size:14px;font-family:'IBM Plex Sans',sans-serif;font-weight:400;letter-spacing:.02em;margin-left:6px}
 .nav-vehicle-pill{display:none;align-items:center;gap:7px;background:rgba(22,27,34,.9);border:1px solid var(--amber-border);border-radius:2px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--amber2);letter-spacing:.08em;flex-shrink:0}
 .nav-pill-dot{width:7px;height:7px;border-radius:50%;background:#3a8a5a;box-shadow:0 0 6px #3a8a5a}
-/* Admin badge */
 .admin-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(120,80,200,.15);border:1px solid rgba(120,80,200,.3);border-radius:2px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#a78bfa;flex-shrink:0}
 .nav-spacer{flex:1}
 .nav-month{display:flex;align-items:center;gap:8px;background:rgba(22,27,34,.8);border:1px solid rgba(212,144,42,.15);border-radius:2px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--cream);letter-spacing:.04em;white-space:nowrap}
@@ -68,10 +67,6 @@ textarea{resize:none}
 .veh-item.active .veh-plate{color:var(--amber2)}
 .veh-meta{font-size:11px;color:var(--dim);margin-top:2px}
 .sb-divider{height:1px;background:var(--amber-border);margin:10px 14px}
-/* Admin driver filter in sidebar */
-.sb-driver-filter{padding:0 14px;margin-bottom:12px}
-.sb-driver-filter select{width:100%;background:rgba(28,35,51,.8);border:1px solid rgba(212,144,42,.2);border-radius:2px;padding:7px 10px;color:var(--cream);font-size:12px;outline:none;cursor:pointer}
-.sb-driver-filter select:focus{border-color:var(--amber-border)}
 
 /* ── MAIN ── */
 .shell{display:flex;padding-top:var(--nav-h);min-height:100vh;position:relative;z-index:1}
@@ -92,6 +87,7 @@ textarea{resize:none}
 .stat-lbl{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
 .stat-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--cream);line-height:1}
 .stat-val.a{color:var(--amber2)}
+.stat-val.g{color:var(--green)}
 .stat-val.d{color:var(--dim)}
 
 /* ── SECTION DIVIDER ── */
@@ -110,8 +106,7 @@ textarea{resize:none}
   background:rgba(255,255,255,.05);
   border:1px solid rgba(212,144,42,.2);border-radius:2px;
   padding:7px 12px;color:var(--cream);font-size:13px;
-  outline:none;cursor:pointer;
-  color-scheme:dark;
+  outline:none;cursor:pointer;color-scheme:dark;
 }
 .date-input:focus{border-color:var(--amber);background:rgba(212,144,42,.05)}
 .btn-today{
@@ -129,76 +124,79 @@ textarea{resize:none}
 .day{background:rgba(22,27,34,.7);border:1px solid rgba(212,144,42,.08);border-radius:3px;padding:8px 7px 7px;min-height:70px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;overflow:hidden}
 .day:hover{border-color:rgba(212,144,42,.3);background:rgba(22,27,34,.95)}
 .day.sel{border-color:var(--amber);background:rgba(212,144,42,.06);box-shadow:0 0 0 1px rgba(212,144,42,.12)}
-.day.is-ph{background:rgba(28,20,50,.8);border-color:rgba(120,80,200,.25)}
-.day.is-off{background:rgba(13,17,23,.5);border-color:rgba(255,255,255,.05);opacity:.55}
+.day.has-entries{border-color:rgba(58,138,90,.25)}
 .day.is-today{border-color:rgba(58,138,90,.5)}
 .day.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
 .day-n{font-family:'IBM Plex Sans',monospace;font-size:13px;font-weight:500;color:var(--dim);display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;line-height:1}
 .day.sel .day-n,.day.is-today .day-n{color:var(--cream)}
-.day-tag{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
-.day-tag.ph{color:#a78bfa}.day-tag.off{color:var(--dim)}
-.day-dots{display:flex;flex-wrap:wrap;gap:3px}
-.dot{width:6px;height:6px;border-radius:50%}
-.day-cnt{font-size:10px;color:var(--dim);margin-top:4px}
+.day-amt{font-size:10px;font-weight:600;color:var(--green);letter-spacing:.02em}
+.day-cnt{font-size:10px;color:var(--dim);margin-top:2px}
 .day-plus{position:absolute;bottom:5px;right:5px;font-size:11px;color:var(--dim);opacity:0;transition:opacity .15s}
 .day:hover .day-plus{opacity:1}
 
-/* ── DAY PANEL ── */
+/* ── ENTRY FORM PANEL ── */
 .day-panel{background:rgba(22,27,34,.92);border:1px solid var(--amber-border);border-radius:3px;padding:24px;margin-bottom:28px;box-shadow:0 0 40px rgba(212,144,42,.06);animation:slideUp .2s ease both}
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .dp-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--amber2);letter-spacing:.03em;margin-bottom:3px}
 .dp-sub{font-size:12px;color:var(--muted);margin-bottom:18px;letter-spacing:.02em}
 
-/* Admin read-only overlay */
-.admin-readonly-note{
-  display:none;
-  background:rgba(120,80,200,.08);border:1px solid rgba(120,80,200,.2);border-radius:2px;
-  padding:10px 14px;font-size:12px;color:#a78bfa;letter-spacing:.03em;margin-bottom:16px;
+/* Form grid */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-col{display:flex;flex-direction:column;gap:5px}
+.field-label{display:block;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0}
+.field-input,.field-select{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;
+  outline:none;transition:border-color .2s,background .2s;
 }
-.admin-readonly-note.show{display:block}
-
-.chips-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
-.chip{display:inline-flex;align-items:center;gap:7px;background:rgba(28,35,51,.8);border:1px solid rgba(255,255,255,.07);border-radius:2px;padding:7px 13px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.03em;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
-.chip:hover{border-color:rgba(212,144,42,.3);color:var(--cream)}
-.chip.on{border-color:var(--amber);background:rgba(212,144,42,.09);color:var(--amber2)}
-.chip:active{transform:scale(.97)}
-.chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.chip-check{font-size:11px;opacity:0;transition:opacity .1s;color:var(--amber)}
-.chip.on .chip-check{opacity:1}
-/* Admin: chips non-interactive */
-.chips-wrap.readonly .chip{pointer-events:none;opacity:.8}
-
-.others-note-wrap{display:none;margin-bottom:14px}
-.others-note-wrap.show{display:block}
-.field-label{display:block;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.field-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;outline:none;transition:border-color .2s,background .2s}
-.field-input:focus{border-color:rgba(212,144,42,.4);background:rgba(212,144,42,.04)}
+.field-select{cursor:pointer;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8599'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.field-select option{background:#161b22;color:#f5efe0}
+.field-input:focus,.field-select:focus{border-color:rgba(212,144,42,.4);background:rgba(212,144,42,.04)}
 .field-input::placeholder{color:var(--dim)}
-.field-input:read-only{opacity:.6;cursor:default}
 
-.dp-note{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;height:68px;outline:none;transition:border-color .2s;margin-bottom:16px}
+/* Amount field highlight */
+.amount-wrap{position:relative}
+.amount-prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--amber);font-size:13px;font-weight:600;pointer-events:none}
+.amount-input{padding-left:26px !important}
+.amount-input:focus{border-color:var(--amber) !important;background:rgba(212,144,42,.06) !important}
+
+/* Notes full width */
+.form-full{margin-bottom:14px;display:flex;flex-direction:column;gap:5px}
+.dp-note{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:3px;padding:10px 13px;color:var(--cream);font-size:13px;height:60px;outline:none;transition:border-color .2s;resize:none}
 .dp-note:focus{border-color:rgba(212,144,42,.4)}
 .dp-note::placeholder{color:var(--dim)}
-.dp-note:read-only{opacity:.6;cursor:default}
 
+/* Action buttons */
 .dp-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:linear-gradient(135deg,var(--amber) 0%,var(--amber2) 100%);color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;transition:all .15s;box-shadow:0 4px 14px rgba(212,144,42,.22);position:relative;overflow:hidden}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,144,42,.32)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:2px;color:var(--muted);font-size:12px;font-weight:500;letter-spacing:.06em;transition:all .15s}
 .btn-ghost:hover{border-color:rgba(212,144,42,.25);color:var(--cream)}
-.btn-danger{display:inline-flex;align-items:center;gap:5px;padding:10px 16px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--red);font-size:12px;font-weight:500;transition:all .15s;opacity:.7}
-.btn-danger:hover{border-color:rgba(224,82,82,.3);background:rgba(224,82,82,.06);opacity:1}
-.tag-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-.btn-tag{padding:8px 14px;border-radius:2px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);color:var(--dim);background:rgba(28,35,51,.6);transition:all .15s}
-.btn-tag.ph:hover,.btn-tag.ph.on{background:rgba(120,80,200,.12);color:#a78bfa;border-color:rgba(120,80,200,.3)}
-.btn-tag.off:hover,.btn-tag.off.on{background:rgba(224,82,82,.08);color:var(--red);border-color:rgba(224,82,82,.25)}
-.btn-tag:disabled{opacity:.4;cursor:default;pointer-events:none}
 
 .save-ring{width:16px;height:16px;border:2px solid rgba(13,17,23,.25);border-top-color:var(--ink);border-radius:50%;animation:spin .6s linear infinite;display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .btn-primary.loading .save-ring{display:block}
 .btn-primary.loading .btn-label{display:none}
+
+/* ── ENTRIES TABLE ── */
+.entries-section{margin-bottom:28px}
+.entries-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+.daily-total-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(58,138,90,.08);border:1px solid rgba(58,138,90,.2);border-radius:2px;padding:6px 16px;font-size:13px;font-weight:600;color:var(--green);letter-spacing:.04em}
+.daily-total-pill span{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.entries-table-wrap{overflow-x:auto}
+.entries-table{width:100%;border-collapse:collapse;font-size:12px;letter-spacing:.02em}
+.entries-table th{background:rgba(212,144,42,.08);border:1px solid var(--amber-border);padding:9px 12px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:left;white-space:nowrap}
+.entries-table td{border:1px solid rgba(255,255,255,.05);padding:9px 12px;color:var(--cream);vertical-align:middle}
+.entries-table tr:hover td{background:rgba(212,144,42,.03)}
+.entries-table td.muted{color:var(--muted)}
+.entries-table td.amt{color:var(--green);font-weight:600;font-family:'IBM Plex Sans',monospace;letter-spacing:.03em}
+.btn-row-del{display:inline-flex;align-items:center;padding:4px 10px;border-radius:2px;border:1px solid transparent;color:var(--dim);font-size:11px;transition:all .15s}
+.btn-row-del:hover{color:var(--red);border-color:rgba(224,82,82,.25);background:rgba(224,82,82,.06)}
+.empty-entries{text-align:center;padding:28px 16px;color:var(--dim);font-size:12px;letter-spacing:.06em}
 
 /* ── ADMIN ALL-LOGS TABLE ── */
 .admin-log-table-wrap{overflow-x:auto;margin-bottom:16px}
@@ -207,8 +205,9 @@ textarea{resize:none}
 .admin-log-table td{border:1px solid rgba(255,255,255,.05);padding:8px 12px;color:var(--cream);vertical-align:top}
 .admin-log-table tr:hover td{background:rgba(120,80,200,.04)}
 .admin-log-table td.muted{color:var(--muted)}
+.admin-log-table td.amt{color:var(--green);font-weight:600;font-family:monospace}
 
-/* ── EXPORT TABLE ── */
+/* ── EXPORT ── */
 .export-section{display:none}
 .export-section.show{display:block}
 .exp-table-wrap{overflow-x:auto;margin-bottom:16px}
@@ -217,8 +216,8 @@ textarea{resize:none}
 .exp-table td{border:1px solid rgba(255,255,255,.05);padding:8px 12px;color:var(--cream);vertical-align:top}
 .exp-table tr:hover td{background:rgba(212,144,42,.03)}
 .exp-table td.muted{color:var(--muted)}
-.badge-ph{background:rgba(120,80,200,.15);color:#a78bfa;border:1px solid rgba(120,80,200,.25);padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.08em}
-.badge-off{background:rgba(60,60,60,.3);color:var(--muted);border:1px solid rgba(255,255,255,.08);padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.08em}
+.exp-table td.amt{color:var(--green);font-weight:600;font-family:monospace}
+.exp-table tfoot td{background:rgba(58,138,90,.07);border-top:1px solid rgba(58,138,90,.2);font-weight:600;color:var(--green)}
 
 /* ── BOTTOM NAV ── */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bnav-h);background:rgba(13,17,23,.96);backdrop-filter:blur(20px);border-top:1px solid var(--amber-border);z-index:400;padding-bottom:env(safe-area-inset-bottom)}
@@ -244,6 +243,21 @@ textarea{resize:none}
 .confirm-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--amber2);margin-bottom:8px}
 .confirm-msg{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px}
 .confirm-btns{display:flex;gap:10px}
+.btn-danger{display:inline-flex;align-items:center;gap:5px;padding:10px 16px;border:1px solid rgba(224,82,82,.3);background:rgba(224,82,82,.08);border-radius:2px;color:var(--red);font-size:12px;font-weight:500;transition:all .15s}
+.btn-danger:hover{background:rgba(224,82,82,.14)}
+
+/* ── EDIT MODAL ── */
+.edit-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+.edit-wrap.show{display:flex}
+.edit-card{background:rgba(22,27,34,.98);border:1px solid var(--amber-border);border-radius:3px;padding:28px;max-width:440px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,.6);animation:slideUp .2s ease both}
+.edit-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--amber2);margin-bottom:4px}
+.edit-sub{font-size:11px;color:var(--muted);letter-spacing:.03em;margin-bottom:20px}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.edit-full{margin-bottom:12px;display:flex;flex-direction:column;gap:5px}
+.edit-actions{display:flex;gap:8px;margin-top:4px}
+.btn-row-edit{display:inline-flex;align-items:center;padding:4px 10px;border-radius:2px;border:1px solid transparent;color:var(--amber);font-size:11px;transition:all .15s}
+.btn-row-edit:hover{border-color:rgba(212,144,42,.3);background:rgba(212,144,42,.07)}
+@media(max-width:480px){.edit-grid{grid-template-columns:1fr}}
 
 /* ── RESPONSIVE ── */
 @media(max-width:1000px){.main{padding:22px 18px 28px}}
@@ -267,17 +281,14 @@ textarea{resize:none}
   .cal-grid,.cal-dow{gap:3px}
   .day{min-height:58px;padding:6px 5px 5px;border-radius:2px}
   .day-n{font-size:11px;margin-bottom:3px}
-  .dot{width:5px;height:5px}
-  .day-cnt{display:none}
+  .form-grid{grid-template-columns:1fr}
   .day-panel{padding:16px}
   .dp-title{font-size:17px}
-  .chip{padding:8px 12px;font-size:13px}
   .bnav{display:flex}
   .toast{bottom:72px}
   .date-pick-row{padding:8px 12px;gap:8px}
 }
 @media(max-width:360px){
-  .chip{padding:7px 10px;font-size:12px}
   .cal-dow-cell{font-size:9px;letter-spacing:.06em}
 }
 </style>
@@ -296,7 +307,7 @@ textarea{resize:none}
 <!-- TOPNAV -->
 <nav class="topnav">
   <button class="nav-ham" id="sbToggle">☰</button>
-  <div class="nav-brand">Charan Logistics<span id="navSubtitle">Driver Log</span></div>
+  <div class="nav-brand">Charan Logistics<span id="navSubtitle">Client Log</span></div>
   <div class="admin-badge" id="adminBadge" style="display:none">⚙ Admin</div>
   <div class="nav-vehicle-pill" id="navPill">
     <div class="nav-pill-dot"></div>
@@ -320,13 +331,6 @@ textarea{resize:none}
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div style="padding:0 14px">
-    <!-- Admin: driver filter -->
-    <div class="sb-driver-filter" id="adminDriverFilter" style="display:none">
-      <div class="sb-label" style="padding:0;margin-bottom:6px">Filter by Driver</div>
-      <select id="driverFilterSelect" onchange="onDriverFilterChange()">
-        <option value="">All Drivers</option>
-      </select>
-    </div>
     <div class="sb-label" style="margin-bottom:12px" id="vehListLabel">My Vehicles</div>
     <div id="vehList"></div>
   </div>
@@ -339,18 +343,17 @@ textarea{resize:none}
 </aside>
 
 <!-- SHELL -->
-<div class="shell" style="position:relative;z-index:1">
+<div class="shell">
 <main class="main" id="mainArea">
 
   <!-- Vehicle header (desktop) -->
-  <div class="vh-bar" id="vehHeader">
+  <div class="vh-bar" id="vehHeader" style="display:none">
     <div>
       <div class="vh-plate-wrap">
         <span class="vh-plate-text" id="hdrPlate">—</span>
         <span class="vh-type-badge" id="hdrType">—</span>
       </div>
-      <div class="vh-driver">
-        Driver: <strong id="hdrDriver">—</strong>
+      <div class="vh-driver">Driver: <strong id="hdrDriver">—</strong>
         <span class="vh-status" id="hdrStatus">● Active</span>
       </div>
     </div>
@@ -358,13 +361,13 @@ textarea{resize:none}
 
   <!-- Stats -->
   <div class="stats" id="statsRow">
-    <div class="stat"><div class="stat-lbl">Working Days</div><div class="stat-val a" id="statWork">—</div></div>
-    <div class="stat"><div class="stat-lbl">Jobs Logged</div><div class="stat-val" id="statJobs">—</div></div>
-    <div class="stat"><div class="stat-lbl">OFF / PH Days</div><div class="stat-val d" id="statOff">—</div></div>
+    <div class="stat"><div class="stat-lbl">Entries This Month</div><div class="stat-val a" id="statEntries">—</div></div>
+    <div class="stat"><div class="stat-lbl">Working Days</div><div class="stat-val" id="statDays">—</div></div>
+    <div class="stat"><div class="stat-lbl">Month Total</div><div class="stat-val g" id="statTotal">—</div></div>
   </div>
 
   <!-- Calendar -->
-  <div class="sec-div" id="calSec">Calendar — <span id="calMonthLabel">—</span></div>
+  <div class="sec-div">Calendar — <span id="calMonthLabel">—</span></div>
   <div id="calSection">
     <div class="cal-dow" id="calDow"></div>
     <div class="cal-grid" id="calGrid"></div>
@@ -377,47 +380,87 @@ textarea{resize:none}
     <button class="btn-today" onclick="jumpToToday()">Today</button>
   </div>
 
-  <!-- Day panel -->
-  <div class="sec-div" id="daySecDiv">Day Entry</div>
+  <!-- New Entry Form -->
+  <div class="sec-div" id="daySecDiv">New Entry — <span id="entryDateLabel">—</span></div>
   <div class="day-panel" id="dayPanel">
     <div class="dp-title" id="dpTitle">Select a day above</div>
     <div class="dp-sub" id="dpSub">Tap any date on the calendar or use the date picker.</div>
 
-
-
-    <div class="chips-wrap" id="chipsWrap"></div>
-
-    <div class="others-note-wrap" id="othersNoteWrap">
-      <label class="field-label">Others — specify client name</label>
-      <input class="field-input" id="othersNoteInput" placeholder="e.g. Bullion Exchange, Tuas client…"/>
+    <div class="form-grid">
+      <!-- Client dropdown -->
+      <div class="form-col">
+        <label class="field-label">Client Name</label>
+        <select class="field-select" id="clientSelect" onchange="onClientSelectChange()">
+          <option value="">— Select client —</option>
+        </select>
+      </div>
+      <!-- Manual client name (shown when "Others" selected) -->
+      <div class="form-col" id="manualClientWrap" style="display:none">
+        <label class="field-label">Specify Client</label>
+        <input class="field-input" id="manualClientInput" placeholder="e.g. Bullion Exchange, Tuas client…"/>
+      </div>
+      <!-- Amount -->
+      <div class="form-col">
+        <label class="field-label">Amount (SGD)</label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">$</span>
+          <input class="field-input amount-input" id="amountInput" type="number" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
     </div>
 
-    <label class="field-label">Day Notes</label>
-    <textarea class="dp-note" id="dpNotes" placeholder="e.g. 23 cartons, helper used, Tuas route…"></textarea>
+    <!-- Notes -->
+    <div class="form-full">
+      <label class="field-label">Notes (optional)</label>
+      <textarea class="dp-note" id="dpNotes" placeholder="e.g. 23 cartons, helper used, Tuas route…"></textarea>
+    </div>
 
-    <div class="dp-actions" id="dpActions">
-      <button class="btn-primary" id="saveBtn" onclick="saveLog()">
-        <span class="btn-label">Save</span>
+    <div class="dp-actions">
+      <button class="btn-primary" id="saveBtn" onclick="saveEntry()">
+        <span class="btn-label">Add Entry</span>
         <span class="save-ring"></span>
       </button>
-      <button class="btn-ghost" id="clearBtn" onclick="clearPanel()">Clear</button>
-      <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()" style="display:none">🗑 Delete</button>
-      <div class="tag-btns">
-        <button class="btn-tag ph" id="phBtn" onclick="toggleTag('ph')">PH</button>
-        <button class="btn-tag off" id="offBtn" onclick="toggleTag('off')">OFF</button>
-      </div>
+      <button class="btn-ghost" onclick="clearForm()">Clear</button>
     </div>
   </div>
 
-  <!-- Admin: all logs table for month -->
-  <div class="sec-div" id="adminLogsSec" style="display:none">All Logs — <span id="adminLogsMonthLabel">—</span></div>
+  <!-- Entries for selected day -->
+  <div class="sec-div" id="entriesSecDiv" style="display:none">
+    Entries — <span id="entriesDayLabel">—</span>
+  </div>
+  <div class="entries-section" id="entriesSection" style="display:none">
+    <div class="entries-header">
+      <div style="font-size:12px;color:var(--muted)">All entries logged for this date</div>
+      <div class="daily-total-pill">
+        <span>Day Total</span>
+        $<span id="dayTotalAmt">0.00</span>
+      </div>
+    </div>
+    <div class="entries-table-wrap">
+      <table class="entries-table" id="entriesTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Notes</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="entriesTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Admin: all logs for month -->
+  <div class="sec-div" id="adminLogsSec" style="display:none">All Entries — <span id="adminLogsMonthLabel">—</span></div>
   <div id="adminLogsSection" style="display:none">
     <div class="admin-log-table-wrap">
       <table class="admin-log-table" id="adminLogsTable">
         <thead>
           <tr>
             <th>Date</th><th>Day</th><th>Vehicle</th><th>Driver</th>
-            <th>Clients</th><th>Notes</th><th>Status</th>
+            <th>Client</th><th>Amount</th><th>Notes</th>
           </tr>
         </thead>
         <tbody id="adminLogsTbody"></tbody>
@@ -432,11 +475,18 @@ textarea{resize:none}
       <table class="exp-table" id="expTable">
         <thead>
           <tr>
-            <th>Date</th><th>Day</th><th>Vehicle</th>
-            <th>Clients Worked</th><th>Notes</th><th>Status</th>
+            <th>Date</th><th>Day</th><th>Vehicle</th><th>Driver</th>
+            <th>Client</th><th>Amount</th><th>Notes</th>
           </tr>
         </thead>
         <tbody id="expTbody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align:right;letter-spacing:.08em;font-size:11px">MONTH TOTAL</td>
+            <td id="expGrandTotal" class="amt">$0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     <button class="btn-primary" onclick="downloadCSV()" style="margin-bottom:8px">⬇ Download CSV</button>
@@ -464,13 +514,52 @@ textarea{resize:none}
   </div>
 </nav>
 
+<!-- EDIT ENTRY MODAL -->
+<div class="edit-wrap" id="editWrap">
+  <div class="edit-card">
+    <div class="edit-title">Edit Entry</div>
+    <div class="edit-sub" id="editSub">Update client or amount below</div>
+    <input type="hidden" id="editEntryId"/>
+    <div class="edit-grid">
+      <div class="form-col">
+        <label class="field-label">Client Name</label>
+        <select class="field-select" id="editClientSelect" onchange="onEditClientSelectChange()">
+          <option value="">— Select client —</option>
+        </select>
+      </div>
+      <div class="form-col" id="editManualClientWrap" style="display:none">
+        <label class="field-label">Specify Client</label>
+        <input class="field-input" id="editManualClientInput" placeholder="e.g. Bullion Exchange…"/>
+      </div>
+      <div class="form-col">
+        <label class="field-label">Amount (SGD)</label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">$</span>
+          <input class="field-input amount-input" id="editAmountInput" type="number" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
+    </div>
+    <div class="edit-full">
+      <label class="field-label">Notes (optional)</label>
+      <textarea class="dp-note" id="editNotesInput" placeholder="e.g. 23 cartons, helper used…" style="margin-bottom:0"></textarea>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-primary" id="editSaveBtn" onclick="doEditSave()">
+        <span class="btn-label">Save Changes</span>
+        <span class="save-ring"></span>
+      </button>
+      <button class="btn-ghost" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM DELETE -->
 <div class="confirm-wrap" id="confirmWrap">
   <div class="confirm-card">
-    <div class="confirm-title">Delete Log Entry?</div>
-    <div class="confirm-msg" id="confirmMsg">This will permanently remove the work log for this date.</div>
+    <div class="confirm-title">Delete Entry?</div>
+    <div class="confirm-msg" id="confirmMsg">This will permanently remove this entry.</div>
     <div class="confirm-btns">
-      <button class="btn-danger" style="border:1px solid rgba(224,82,82,.3);background:rgba(224,82,82,.08);opacity:1" onclick="doDelete()">Yes, Delete</button>
+      <button class="btn-danger" onclick="doDelete()">Yes, Delete</button>
       <button class="btn-ghost" onclick="closeConfirm()">Cancel</button>
     </div>
   </div>
@@ -480,40 +569,28 @@ textarea{resize:none}
 
 <script>
 // ══════════════════════════════════════════════════════════
-// CONFIG
+// CONFIG — replace with your Supabase credentials
 // ══════════════════════════════════════════════════════════
-
-const SUPABASE_URL     = "%%SUPABASE_URL%%";
+const SUPABASE_URL      = "%%SUPABASE_URL%%";
 const SUPABASE_ANON_KEY = "%%SUPABASE_ANON_KEY%%";
 
-///const SUPABASE_URL      = "https://tcqtwakxszryzrfxoyze.supabase.co";
-///const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXR3YWt4c3pyeXpyZnhveXplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzQzNzUsImV4cCI6MjA4OTE1MDM3NX0.uMYxktFu0E04WrM8VGsXng7WkuO6ACUBIAvoceylXS0";
 
-// ── HOW ADMIN ROLE IS DETECTED ────────────────────────────
-// Store role in Supabase auth user metadata.
-// In Supabase dashboard → Authentication → Users → Edit user → app_metadata:
-//   { "role": "admin" }
-// Drivers have no role set (or role: "driver")
-// ─────────────────────────────────────────────────────────
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── STATE ─────────────────────────────────────────────────
-let currentUser   = null;
-let isAdmin       = false;
-let allVehicles   = [];   // all vehicles (admin) or assigned (driver)
-let clientsList   = [];   // all active clients
-let activeVeh     = null;
-let logsCache     = {};   // { 'YYYY-MM-DD': rowObj } for active vehicle
-let selectedDate  = null; // 'YYYY-MM-DD'
-let currentTag    = '';
-let selectedClients = new Set();
-let existingLogId   = null;
-// Admin extras
-let allDriverUsers  = [];  // [{ user_id, driver_name, plate }]
-let filterUserId    = '';  // '' = all drivers
-let adminAllLogs    = [];  // raw rows for admin month view
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let currentUser  = null;
+let isAdmin      = false;
+let allVehicles  = [];
+let clientsList  = [];
+let activeVeh    = null;
+let selectedDate = null;
+// logsCache: { 'YYYY-MM-DD': [ ...entry rows ] }
+let logsCache    = {};
+let pendingDeleteId = null;
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -527,18 +604,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!session) { window.location.replace('./login.html'); return; }
   currentUser = session.user;
 
-  // Detect admin via app_metadata.role (set by admin in Supabase dashboard)
-  isAdmin = (currentUser.app_metadata?.role === 'admin');
-
   const now = new Date();
   viewYear  = now.getFullYear();
   viewMonth = now.getMonth();
 
   await loadData();
   hideLoading();
-  applyRoleUI();
 
-  // Set date picker to today
   document.getElementById('datePickInput').value = todayStr();
   selectedDate = todayStr();
 
@@ -550,85 +622,86 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ══════════════════════════════════════════════════════════
-// LOAD DATA
+// LOAD MASTER DATA
 // ══════════════════════════════════════════════════════════
 async function loadData() {
-  // DB-driven access control via driver_vehicles:
-  //   NULL vehicle_id row  → user sees ALL vehicles (admin/manager)
-  //   specific UUID row(s) → user sees only those vehicles (driver)
-  //   multiple UUID rows   → driver with 2+ vehicles
-  const { data: dvRows, error: dvErr } = await sb
+  // Same access control pattern as driver log
+  const { data: dvRows } = await sb
     .from('driver_vehicles')
     .select('vehicle_id')
     .eq('user_id', currentUser.id);
-  if (dvErr) console.error('driver_vehicles error', dvErr);
 
   const rows = dvRows || [];
   const hasAllAccess = rows.some(r => r.vehicle_id === null);
 
   if (hasAllAccess) {
-    // NULL entry = all vehicles access
     isAdmin = true;
-    const { data: vRows, error: vErr } = await sb
-      .from('vehiclelist')
-      .select('*')
-      .order('plate');
-    if (vErr) console.error('vehicles error', vErr);
+    const { data: vRows } = await sb.from('vehiclelist').select('*').order('plate');
     allVehicles = vRows || [];
   } else {
-    // Specific vehicle IDs only
     const ids = rows.map(r => r.vehicle_id).filter(Boolean);
-    if (ids.length === 0) {
-      allVehicles = [];
-    } else {
-      const { data: vRows, error: vErr } = await sb
-        .from('vehiclelist')
-        .select('*')
-        .in('id', ids)
-        .order('plate');
-      if (vErr) console.error('vehicles error', vErr);
+    if (ids.length) {
+      const { data: vRows } = await sb.from('vehiclelist').select('*').in('id', ids).order('plate');
       allVehicles = vRows || [];
     }
   }
 
-  // Load all active clients
-  const { data: cRows, error: cErr } = await sb
+  // Load active clients
+  const { data: cRows } = await sb
     .from('clientslist')
     .select('*')
     .eq('is_active', true)
     .order('sort_order');
-  if (cErr) console.error('clients error', cErr);
   clientsList = cRows || [];
 
-  // Nav user name
+  // Populate client dropdown
+  const sel = document.getElementById('clientSelect');
+  clientsList.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.note ? ` (${c.note})` : '');
+    sel.appendChild(opt);
+  });
+  // Add manual "Others" option if not already in clientslist
+  if (!clientsList.find(c => c.name === 'Others')) {
+    const opt = document.createElement('option');
+    opt.value = '__manual__';
+    opt.textContent = 'Others (specify)';
+    sel.appendChild(opt);
+  }
+
+  // Role UI
   const displayName = allVehicles[0]?.driver_name || currentUser.email?.split('@')[0] || 'User';
   document.getElementById('navUserName').textContent = displayName;
+
+  if (isAdmin) {
+    document.getElementById('adminBadge').style.display   = 'inline-flex';
+    document.getElementById('navSubtitle').textContent    = 'Admin';
+    document.getElementById('vehListLabel').textContent   = 'All Vehicles';
+    document.getElementById('adminLogsSec').style.display = '';
+    document.getElementById('adminLogsSection').style.display = 'block';
+  }
 
   renderVehList();
 }
 
 // ══════════════════════════════════════════════════════════
-// ROLE UI
+// CLIENT SELECT CHANGE — show/hide manual input
 // ══════════════════════════════════════════════════════════
-function applyRoleUI() {
-  if (isAdmin) {
-    document.getElementById('adminBadge').style.display = 'inline-flex';
-    document.getElementById('navSubtitle').textContent  = 'Admin';
-    document.getElementById('vehListLabel').textContent = 'All Vehicles';
-    document.getElementById('adminLogsSec').style.display = '';
-    document.getElementById('adminLogsSection').style.display = 'block';
-  }
-  // Everyone (admin + driver) can fully edit logs — no read-only lockdown
+function onClientSelectChange() {
+  const val = document.getElementById('clientSelect').value;
+  const othersClientId = clientsList.find(c => c.name === 'Others')?.id;
+  const isOthers = val === '__manual__' || val === othersClientId;
+  document.getElementById('manualClientWrap').style.display = isOthers ? '' : 'none';
 }
 
 // ══════════════════════════════════════════════════════════
 // VEHICLE LIST
 // ══════════════════════════════════════════════════════════
 function renderVehList() {
-  const el  = document.getElementById('vehList');
+  const el = document.getElementById('vehList');
   el.innerHTML = '';
-  const list = allVehicles; // same for both admin and driver — assigned vehicles only
-  list.forEach(v => {
+  allVehicles.forEach(v => {
     const div = document.createElement('div');
     div.className = 'veh-item' + (activeVeh?.id === v.id ? ' active' : '');
     div.innerHTML = `
@@ -643,73 +716,70 @@ function renderVehList() {
 }
 
 // ══════════════════════════════════════════════════════════
-// SELECT VEHICLE — FIX: properly awaits and updates all UI
+// SELECT VEHICLE
 // ══════════════════════════════════════════════════════════
 async function selectVehicle(v) {
   if (!v) return;
   activeVeh = v;
-  renderVehList(); // re-render to update active highlight
+  renderVehList();
 
-  // Update headers
-  document.getElementById('hdrPlate').textContent    = v.plate;
-  document.getElementById('hdrType').textContent     = v.type.toUpperCase();
-  document.getElementById('hdrDriver').textContent   = v.driver_name || '—';
-  document.getElementById('hdrStatus').textContent   = '● ' + (v.status || 'active');
+  document.getElementById('hdrPlate').textContent     = v.plate;
+  document.getElementById('hdrType').textContent      = v.type.toUpperCase();
+  document.getElementById('hdrDriver').textContent    = v.driver_name || '—';
+  document.getElementById('hdrStatus').textContent    = '● ' + (v.status || 'active');
   document.getElementById('navPillPlate').textContent = v.plate;
   document.getElementById('vehHeader').style.display  = '';
 
-  await loadMonthLogs();
+  await loadMonthEntries();
   renderCalendar();
-
-  // Keep currently selected date or default to today
   if (!selectedDate) selectedDate = todayStr();
-  renderDayPanel();
-
-  // Admin: also render all logs table
+  await renderDayEntries();
   if (isAdmin) await renderAdminLogsTable();
 }
 
 // ══════════════════════════════════════════════════════════
-// LOAD LOGS
+// LOAD MONTH ENTRIES
 // ══════════════════════════════════════════════════════════
-async function loadMonthLogs() {
+async function loadMonthEntries() {
   logsCache = {};
   if (!activeVeh) return;
 
-  const y = viewYear, m = viewMonth;
-  const from = `${y}-${pad(m+1)}-01`;
-  const to   = `${y}-${pad(m+1)}-${pad(daysInMonth(y, m))}`;
+  const from = `${viewYear}-${pad(viewMonth+1)}-01`;
+  const to   = `${viewYear}-${pad(viewMonth+1)}-${pad(daysInMonth(viewYear, viewMonth))}`;
 
   let query = sb
-    .from('work_logs')
-    .select('id, log_date, clients_worked, others_note, notes, tag, user_id, vehicle_id')
+    .from('workerdetails')
+    .select('id, log_date, client_id, client_name, amount, notes, user_id, vehicle_id')
     .eq('vehicle_id', activeVeh.id)
     .gte('log_date', from)
-    .lte('log_date', to);
+    .lte('log_date', to)
+    .order('created_at');
 
-  // Drivers only see their own (RLS handles it too, this is just explicit)
-  if (!isAdmin) {
-    query = query.eq('user_id', currentUser.id);
-  }
+  if (!isAdmin) query = query.eq('user_id', currentUser.id);
 
   const { data, error } = await query;
-  if (error) { console.error('loadMonthLogs error:', error); toast('⚠ Error loading logs: ' + error.message); return; }
+  if (error) { console.error('loadMonthEntries:', error); toast('⚠ Error loading entries'); return; }
 
   (data || []).forEach(row => {
-    logsCache[row.log_date] = row;
+    if (!logsCache[row.log_date]) logsCache[row.log_date] = [];
+    logsCache[row.log_date].push(row);
   });
 
   updateStats();
 }
 
 function updateStats() {
-  const logs    = Object.values(logsCache);
-  const working = logs.filter(l => l.tag === '').length;
-  const offPh   = logs.filter(l => l.tag === 'ph' || l.tag === 'off').length;
-  const jobs    = logs.reduce((s, l) => s + (l.clients_worked?.length || 0), 0);
-  document.getElementById('statWork').textContent = working;
-  document.getElementById('statJobs').textContent = jobs;
-  document.getElementById('statOff').textContent  = offPh;
+  let totalEntries = 0, totalAmount = 0, workingDays = 0;
+  Object.entries(logsCache).forEach(([, rows]) => {
+    if (rows.length) workingDays++;
+    rows.forEach(r => {
+      totalEntries++;
+      totalAmount += parseFloat(r.amount) || 0;
+    });
+  });
+  document.getElementById('statEntries').textContent = totalEntries;
+  document.getElementById('statDays').textContent    = workingDays;
+  document.getElementById('statTotal').textContent   = '$' + totalAmount.toFixed(2);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -719,11 +789,15 @@ function renderCalendar() {
   const label = `${MONTHS[viewMonth]} ${viewYear}`;
   document.getElementById('monthLabel').textContent    = label;
   document.getElementById('calMonthLabel').textContent = label;
-  if (isAdmin) document.getElementById('adminLogsMonthLabel').textContent = label;
 
   const dow = document.getElementById('calDow');
   dow.innerHTML = '';
-  DAYS.forEach(d => { const c = document.createElement('div'); c.className = 'cal-dow-cell'; c.textContent = d; dow.appendChild(c); });
+  DAYS.forEach(d => {
+    const c = document.createElement('div');
+    c.className   = 'cal-dow-cell';
+    c.textContent = d;
+    dow.appendChild(c);
+  });
 
   const grid  = document.getElementById('calGrid');
   grid.innerHTML = '';
@@ -736,32 +810,23 @@ function renderCalendar() {
 
   const total = daysInMonth(viewYear, viewMonth);
   for (let d = 1; d <= total; d++) {
-    const ds  = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
-    const log = logsCache[ds];
+    const ds      = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
+    const entries = logsCache[ds] || [];
+    const dayTotal = entries.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+
     const div = document.createElement('div');
     let cls = 'day';
     if (ds === selectedDate) cls += ' sel';
     if (ds === today)        cls += ' is-today';
-    if (log?.tag === 'ph')   cls += ' is-ph';
-    if (log?.tag === 'off')  cls += ' is-off';
-    div.className = cls;
+    if (entries.length)      cls += ' has-entries';
+    div.className  = cls;
     div.dataset.date = ds;
-    div.onclick = () => selectDate(ds);
+    div.onclick    = () => selectDate(ds);
 
-    let inner = `<div class="day-n">${d}`;
-    if (log?.tag === 'ph')       inner += `<span class="day-tag ph">PH</span>`;
-    else if (log?.tag === 'off') inner += `<span class="day-tag off">OFF</span>`;
-    inner += `</div>`;
-
-    const cw = log?.clients_worked || [];
-    if (cw.length) {
-      inner += `<div class="day-dots">`;
-      cw.slice(0,6).forEach(cid => {
-        const cl = clientsList.find(c => c.id === cid);
-        if (cl) inner += `<div class="dot" style="background:${cl.color}"></div>`;
-      });
-      inner += `</div>`;
-      inner += `<div class="day-cnt">${cw.length} client${cw.length > 1 ? 's' : ''}</div>`;
+    let inner = `<div class="day-n">${d}</div>`;
+    if (entries.length) {
+      inner += `<div class="day-amt">$${dayTotal.toFixed(2)}</div>`;
+      inner += `<div class="day-cnt">${entries.length} entr${entries.length > 1 ? 'ies' : 'y'}</div>`;
     }
     inner += `<div class="day-plus">＋</div>`;
     div.innerHTML = inner;
@@ -770,13 +835,13 @@ function renderCalendar() {
 }
 
 // ══════════════════════════════════════════════════════════
-// DATE SELECTION — date picker + calendar cells
+// DATE SELECTION
 // ══════════════════════════════════════════════════════════
 function selectDate(ds) {
   selectedDate = ds;
-  document.getElementById('datePickInput').value = ds;  // sync date picker
+  document.getElementById('datePickInput').value = ds;
   renderCalendar();
-  renderDayPanel();
+  renderDayEntries();
   if (window.innerWidth <= 720) {
     setTimeout(() => document.getElementById('dayPanel').scrollIntoView({ behavior:'smooth', block:'start' }), 80);
   }
@@ -786,14 +851,12 @@ function onDatePickChange() {
   const val = document.getElementById('datePickInput').value;
   if (!val) return;
   const [y, m] = val.split('-').map(Number);
-  // If the date is in a different month, navigate there first
   if (y !== viewYear || (m - 1) !== viewMonth) {
-    viewYear  = y;
-    viewMonth = m - 1;
-    loadMonthLogs().then(() => {
+    viewYear = y; viewMonth = m - 1;
+    loadMonthEntries().then(() => {
       selectedDate = val;
       renderCalendar();
-      renderDayPanel();
+      renderDayEntries();
       if (isAdmin) renderAdminLogsTable();
     });
   } else {
@@ -804,201 +867,271 @@ function onDatePickChange() {
 function jumpToToday() {
   const t = todayStr();
   const [y, m] = t.split('-').map(Number);
-  viewYear  = y;
-  viewMonth = m - 1;
+  viewYear = y; viewMonth = m - 1;
   document.getElementById('datePickInput').value = t;
-  loadMonthLogs().then(() => {
+  loadMonthEntries().then(() => {
     selectedDate = t;
     renderCalendar();
-    renderDayPanel();
+    renderDayEntries();
     if (isAdmin) renderAdminLogsTable();
   });
 }
 
 // ══════════════════════════════════════════════════════════
-// DAY PANEL
+// DAY PANEL — update title + show entries table
 // ══════════════════════════════════════════════════════════
-function renderDayPanel() {
+async function renderDayEntries() {
   if (!selectedDate) return;
 
   const [y, m, d] = selectedDate.split('-').map(Number);
   const date = new Date(y, m - 1, d);
-  document.getElementById('dpTitle').textContent =
-    `${DAYS[date.getDay()]}, ${d} ${MONTHS[m - 1]} ${y}`;
+  const label = `${DAYS[date.getDay()]}, ${d} ${MONTHS[m - 1]} ${y}`;
 
-  const log = logsCache[selectedDate];
-  existingLogId    = log?.id    || null;
-  selectedClients  = new Set(log?.clients_worked || []);
-  currentTag       = log?.tag   || '';
-
-  document.getElementById('dpNotes').value         = log?.notes       || '';
-  document.getElementById('othersNoteInput').value = log?.others_note || '';
+  document.getElementById('dpTitle').textContent      = label;
+  document.getElementById('entryDateLabel').textContent = label;
+  document.getElementById('entriesDayLabel').textContent = label;
 
   const today = todayStr();
-  let subMsg = 'Tap any date on the calendar or use the date picker.';
-  if (selectedDate === today)    subMsg = 'Today — add or update your work log.';
-  else if (selectedDate < today) subMsg = 'Past date — you can still add or edit this entry.';
-  else                           subMsg = 'Future date — log in advance if needed.';
-  document.getElementById('dpSub').textContent = subMsg;
+  let sub = 'Tap any date on the calendar or use the date picker.';
+  if (selectedDate === today)    sub = 'Today — add entries for this date.';
+  else if (selectedDate < today) sub = 'Past date — you can still add or edit entries.';
+  else                           sub = 'Future date — log in advance if needed.';
+  document.getElementById('dpSub').textContent = sub;
 
-  document.getElementById('phBtn').classList.toggle('on', currentTag === 'ph');
-  document.getElementById('offBtn').classList.toggle('on', currentTag === 'off');
+  // Render entries table for this day
+  const entries = logsCache[selectedDate] || [];
+  const tbody   = document.getElementById('entriesTbody');
+  tbody.innerHTML = '';
 
-  // Delete button — show for anyone when a log exists
-  document.getElementById('deleteBtn').style.display =
-    existingLogId ? 'inline-flex' : 'none';
+  const entriesSection = document.getElementById('entriesSection');
+  const entriesSecDiv  = document.getElementById('entriesSecDiv');
 
-  renderChips();
+  if (entries.length === 0) {
+    entriesSection.style.display  = 'none';
+    entriesSecDiv.style.display   = 'none';
+  } else {
+    entriesSection.style.display  = 'block';
+    entriesSecDiv.style.display   = '';
+
+    let dayTotal = 0;
+    entries.forEach((row, i) => {
+      const clientName = resolveClientName(row);
+      dayTotal += parseFloat(row.amount) || 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="muted" style="width:32px">${i + 1}</td>
+        <td>${clientName}</td>
+        <td class="amt">$${parseFloat(row.amount).toFixed(2)}</td>
+        <td class="muted">${row.notes || '—'}</td>
+        <td style="width:100px;text-align:right;white-space:nowrap">
+          <button class="btn-row-edit" onclick="openEdit('${row.id}')">✏ Edit</button>
+          <button class="btn-row-del" onclick="confirmDelete('${row.id}','${clientName.replace(/'/g,"\\'")}')">🗑</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('dayTotalAmt').textContent = dayTotal.toFixed(2);
+  }
 }
 
-function renderChips() {
-  const wrap = document.getElementById('chipsWrap');
-  wrap.innerHTML = '';
-  clientsList.forEach(c => {
-    const on  = selectedClients.has(c.id);
-    const btn = document.createElement('button');
-    btn.className = 'chip' + (on ? ' on' : '');
-    btn.innerHTML = `
-      <div class="chip-dot" style="background:${c.color}"></div>
-      ${c.name}
-      ${c.note && c.name !== 'Others' ? `<span style="font-size:10px;color:var(--dim);margin-left:2px">(${c.note})</span>` : ''}
-      <span class="chip-check">✓</span>`;
-    btn.onclick = () => {
-      if (selectedClients.has(c.id)) selectedClients.delete(c.id);
-      else selectedClients.add(c.id);
-      renderChips();
-      toggleOthersNote();
-    };
-    wrap.appendChild(btn);
-  });
-  toggleOthersNote();
-}
-
-function toggleOthersNote() {
-  const othersId = clientsList.find(c => c.name === 'Others')?.id;
-  const show = othersId && selectedClients.has(othersId);
-  document.getElementById('othersNoteWrap').classList.toggle('show', !!show);
-}
-
-function toggleTag(tag) {
-  currentTag = currentTag === tag ? '' : tag;
-  document.getElementById('phBtn').classList.toggle('on', currentTag === 'ph');
-  document.getElementById('offBtn').classList.toggle('on', currentTag === 'off');
+function resolveClientName(row) {
+  if (row.client_id) {
+    const cl = clientsList.find(c => c.id === row.client_id);
+    if (cl) {
+      if (cl.name === 'Others' && row.client_name) return `Others (${row.client_name})`;
+      return cl.name;
+    }
+  }
+  return row.client_name || '—';
 }
 
 // ══════════════════════════════════════════════════════════
-// SAVE LOG — FIX: proper upsert with correct conflict target
+// SAVE ENTRY
 // ══════════════════════════════════════════════════════════
-async function saveLog() {
+async function saveEntry() {
   if (!activeVeh || !selectedDate) { toast('⚠ No vehicle or date selected'); return; }
+
+  const clientVal   = document.getElementById('clientSelect').value;
+  const amountRaw   = document.getElementById('amountInput').value;
+  const notes       = document.getElementById('dpNotes').value.trim();
+  const manualName  = document.getElementById('manualClientInput').value.trim();
+
+  if (!clientVal) { toast('⚠ Please select a client'); return; }
+  const amount = parseFloat(amountRaw);
+  if (isNaN(amount) || amount < 0) { toast('⚠ Please enter a valid amount'); return; }
+
+  const isManual    = clientVal === '__manual__';
+  const othersId    = clientsList.find(c => c.name === 'Others')?.id;
+  const isOthers    = clientVal === othersId;
+  const needsManual = isManual || isOthers;
+  if (needsManual && !manualName) { toast('⚠ Please specify the client name'); return; }
 
   const btn = document.getElementById('saveBtn');
   btn.classList.add('loading'); btn.disabled = true;
 
   const payload = {
-    vehicle_id:     activeVeh.id,
-    user_id:        currentUser.id,
-    log_date:       selectedDate,
-    clients_worked: [...selectedClients],
-    others_note:    document.getElementById('othersNoteInput').value.trim(),
-    notes:          document.getElementById('dpNotes').value.trim(),
-    tag:            currentTag,
+    vehicle_id:  activeVeh.id,
+    user_id:     currentUser.id,
+    log_date:    selectedDate,
+    client_id:   isManual ? null : clientVal,
+    client_name: needsManual ? manualName : null,
+    amount:      amount,
+    notes:       notes || null,
   };
 
-  let error;
-
-  if (existingLogId) {
-    // UPDATE existing row by id
-    const res = await sb
-      .from('work_logs')
-      .update({
-        clients_worked: payload.clients_worked,
-        others_note:    payload.others_note,
-        notes:          payload.notes,
-        tag:            payload.tag,
-      })
-      .eq('id', existingLogId);
-    error = res.error;
-  } else {
-    // INSERT new row — upsert guards against race conditions
-    const res = await sb
-      .from('work_logs')
-      .insert(payload);
-    error = res.error;
-
-    // If unique constraint hit (duplicate date+vehicle), fall back to update
-    if (error && error.code === '23505') {
-      // Fetch existing row first
-      const { data: existing } = await sb
-        .from('work_logs')
-        .select('id')
-        .eq('vehicle_id', activeVeh.id)
-        .eq('log_date', selectedDate)
-        .single();
-      if (existing) {
-        existingLogId = existing.id;
-        const res2 = await sb
-          .from('work_logs')
-          .update({
-            clients_worked: payload.clients_worked,
-            others_note:    payload.others_note,
-            notes:          payload.notes,
-            tag:            payload.tag,
-          })
-          .eq('id', existing.id);
-        error = res2.error;
-      }
-    }
-  }
+  const { error } = await sb.from('workerdetails').insert(payload);
 
   btn.classList.remove('loading'); btn.disabled = false;
 
-  if (error) {
-    console.error('save error:', error);
-    toast('⚠ Error: ' + error.message);
-    return;
+  if (error) { console.error('save error:', error); toast('⚠ Error: ' + error.message); return; }
+
+  toast('✓ Entry added');
+  clearForm();
+  await loadMonthEntries();
+  renderCalendar();
+  await renderDayEntries();
+}
+
+function clearForm() {
+  document.getElementById('clientSelect').value        = '';
+  document.getElementById('amountInput').value         = '';
+  document.getElementById('dpNotes').value             = '';
+  document.getElementById('manualClientInput').value   = '';
+  document.getElementById('manualClientWrap').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// EDIT ENTRY
+// ══════════════════════════════════════════════════════════
+
+// Populate the edit client dropdown (same list as main form, done once)
+function populateEditDropdown() {
+  const sel = document.getElementById('editClientSelect');
+  if (sel.options.length > 1) return; // already populated
+  clientsList.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.note ? ` (${c.note})` : '');
+    sel.appendChild(opt);
+  });
+  if (!clientsList.find(c => c.name === 'Others')) {
+    const opt = document.createElement('option');
+    opt.value = '__manual__';
+    opt.textContent = 'Others (specify)';
+    sel.appendChild(opt);
+  }
+}
+
+function openEdit(rowId) {
+  // Find the row across logsCache
+  let row = null;
+  for (const entries of Object.values(logsCache)) {
+    row = entries.find(r => r.id === rowId);
+    if (row) break;
+  }
+  if (!row) { toast('⚠ Entry not found'); return; }
+
+  populateEditDropdown();
+
+  const [yr, mo, dy] = row.log_date.split('-').map(Number);
+  const date = new Date(yr, mo - 1, dy);
+  document.getElementById('editSub').textContent =
+    `${DAYS[date.getDay()]}, ${dy} ${MONTHS[mo - 1]} ${yr}`;
+  document.getElementById('editEntryId').value     = row.id;
+  document.getElementById('editAmountInput').value = parseFloat(row.amount).toFixed(2);
+  document.getElementById('editNotesInput').value  = row.notes || '';
+
+  // Set client dropdown
+  const sel = document.getElementById('editClientSelect');
+  const othersId = clientsList.find(c => c.name === 'Others')?.id;
+  if (row.client_id) {
+    sel.value = row.client_id;
+    const isOthers = row.client_id === othersId;
+    document.getElementById('editManualClientWrap').style.display = isOthers ? '' : 'none';
+    document.getElementById('editManualClientInput').value = isOthers ? (row.client_name || '') : '';
+  } else {
+    sel.value = '__manual__';
+    document.getElementById('editManualClientWrap').style.display = '';
+    document.getElementById('editManualClientInput').value = row.client_name || '';
   }
 
-  toast('✓ Log saved');
-  await loadMonthLogs();
+  document.getElementById('editWrap').classList.add('show');
+}
+
+function closeEdit() {
+  document.getElementById('editWrap').classList.remove('show');
+}
+
+function onEditClientSelectChange() {
+  const val = document.getElementById('editClientSelect').value;
+  const othersId = clientsList.find(c => c.name === 'Others')?.id;
+  const isOthers = val === '__manual__' || val === othersId;
+  document.getElementById('editManualClientWrap').style.display = isOthers ? '' : 'none';
+}
+
+async function doEditSave() {
+  const id         = document.getElementById('editEntryId').value;
+  const clientVal  = document.getElementById('editClientSelect').value;
+  const amountRaw  = document.getElementById('editAmountInput').value;
+  const notes      = document.getElementById('editNotesInput').value.trim();
+  const manualName = document.getElementById('editManualClientInput').value.trim();
+
+  if (!clientVal) { toast('⚠ Please select a client'); return; }
+  const amount = parseFloat(amountRaw);
+  if (isNaN(amount) || amount < 0) { toast('⚠ Please enter a valid amount'); return; }
+
+  const isManual    = clientVal === '__manual__';
+  const othersId    = clientsList.find(c => c.name === 'Others')?.id;
+  const isOthers    = clientVal === othersId;
+  const needsManual = isManual || isOthers;
+  if (needsManual && !manualName) { toast('⚠ Please specify the client name'); return; }
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const { error } = await sb
+    .from('workerdetails')
+    .update({
+      client_id:   isManual ? null : clientVal,
+      client_name: needsManual ? manualName : null,
+      amount:      amount,
+      notes:       notes || null,
+    })
+    .eq('id', id);
+
+  btn.classList.remove('loading'); btn.disabled = false;
+
+  if (error) { console.error('edit error:', error); toast('⚠ Error: ' + error.message); return; }
+
+  toast('✓ Entry updated');
+  closeEdit();
+  await loadMonthEntries();
   renderCalendar();
-  renderDayPanel();
+  await renderDayEntries();
 }
 
 // ══════════════════════════════════════════════════════════
-// CLEAR / DELETE
+// DELETE ENTRY
 // ══════════════════════════════════════════════════════════
-function clearPanel() {
-  selectedClients = new Set();
-  currentTag = '';
-  document.getElementById('dpNotes').value = '';
-  document.getElementById('othersNoteInput').value = '';
-  renderChips();
-  document.getElementById('phBtn').classList.remove('on');
-  document.getElementById('offBtn').classList.remove('on');
-}
-
-function confirmDelete() {
-  const [y, m, d] = selectedDate.split('-').map(Number);
+function confirmDelete(id, clientName) {
+  pendingDeleteId = id;
   document.getElementById('confirmMsg').textContent =
-    `This will permanently remove the work log for ${d} ${MONTHS[m-1]} ${y}. This cannot be undone.`;
+    `This will permanently remove the entry for "${clientName}". This cannot be undone.`;
   document.getElementById('confirmWrap').classList.add('show');
 }
-function closeConfirm() { document.getElementById('confirmWrap').classList.remove('show'); }
-
+function closeConfirm() {
+  document.getElementById('confirmWrap').classList.remove('show');
+  pendingDeleteId = null;
+}
 async function doDelete() {
-  if (!existingLogId) return;
+  if (!pendingDeleteId) return;
   closeConfirm();
-  const { error } = await sb
-    .from('work_logs')
-    .delete()
-    .eq('id', existingLogId);
+  const { error } = await sb.from('workerdetails').delete().eq('id', pendingDeleteId);
   if (error) { toast('⚠ Error: ' + error.message); return; }
   toast('🗑 Entry deleted');
-  existingLogId = null;
-  await loadMonthLogs();
+  await loadMonthEntries();
   renderCalendar();
-  renderDayPanel();
+  await renderDayEntries();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1009,53 +1142,41 @@ async function renderAdminLogsTable() {
   const label = `${MONTHS[viewMonth]} ${viewYear}`;
   document.getElementById('adminLogsMonthLabel').textContent = label;
 
-  const y = viewYear, m = viewMonth;
-  const from = `${y}-${pad(m+1)}-01`;
-  const to   = `${y}-${pad(m+1)}-${pad(daysInMonth(y, m))}`;
+  const from = `${viewYear}-${pad(viewMonth+1)}-01`;
+  const to   = `${viewYear}-${pad(viewMonth+1)}-${pad(daysInMonth(viewYear, viewMonth))}`;
 
-  // Admin RLS policy must allow this — requires service key OR permissive policy
-  // FIX: add an admin policy (see SQL below) or use service key in admin panel
   const { data, error } = await sb
-    .from('work_logs')
-    .select('id, log_date, clients_worked, others_note, notes, tag, user_id, vehicle_id')
+    .from('workerdetails')
+    .select('id, log_date, client_id, client_name, amount, notes, user_id, vehicle_id')
     .gte('log_date', from)
     .lte('log_date', to)
-    .order('log_date');
+    .order('log_date')
+    .order('created_at');
 
   if (error) { console.error('admin logs error:', error); return; }
-  adminAllLogs = data || [];
 
   const tbody = document.getElementById('adminLogsTbody');
   tbody.innerHTML = '';
 
-  if (!adminAllLogs.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:20px">No logs found for this month.</td></tr>`;
+  if (!data?.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:20px">No entries found for this month.</td></tr>`;
     return;
   }
 
-  adminAllLogs.forEach(log => {
-    const veh    = allVehicles.find(v => v.id === log.vehicle_id);
-    const [y,m,d] = log.log_date.split('-').map(Number);
-    const date   = new Date(y, m-1, d);
-    const cNames = (log.clients_worked || [])
-      .map(cid => clientsList.find(c => c.id === cid)?.name || '')
-      .filter(Boolean)
-      .join(', ');
-
-    let statusCell = '—';
-    if (log.tag === 'ph')        statusCell = `<span class="badge-ph">PH</span>`;
-    else if (log.tag === 'off')  statusCell = `<span class="badge-off">OFF</span>`;
-    else                         statusCell = `<span style="color:var(--green);font-size:11px">● Logged</span>`;
-
+  data.forEach(row => {
+    const veh       = allVehicles.find(v => v.id === row.vehicle_id);
+    const [yr,mo,dy] = row.log_date.split('-').map(Number);
+    const date      = new Date(yr, mo-1, dy);
+    const clientName = resolveClientName(row);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="white-space:nowrap;font-family:monospace">${log.log_date}</td>
+      <td style="white-space:nowrap;font-family:monospace">${row.log_date}</td>
       <td class="muted">${DAYS[date.getDay()]}</td>
       <td style="font-family:monospace;letter-spacing:.05em">${veh?.plate || '—'}</td>
       <td class="muted">${veh?.driver_name || '—'}</td>
-      <td>${cNames || '<span style="color:var(--dim)">—</span>'}</td>
-      <td class="muted">${log.notes || '—'}</td>
-      <td>${statusCell}</td>`;
+      <td>${clientName}</td>
+      <td class="amt">$${parseFloat(row.amount).toFixed(2)}</td>
+      <td class="muted">${row.notes || '—'}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -1067,8 +1188,9 @@ async function changeMonth(dir) {
   viewMonth += dir;
   if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
   if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
-  await loadMonthLogs();
+  await loadMonthEntries();
   renderCalendar();
+  await renderDayEntries();
   if (isAdmin) await renderAdminLogsTable();
 }
 
@@ -1080,43 +1202,46 @@ document.getElementById('exportNavBtn').onclick = openExport;
 async function openExport() {
   const label = `${MONTHS[viewMonth]} ${viewYear}`;
   document.getElementById('expMonthLabel').textContent = label;
-  document.getElementById('expSecDiv').style.display = '';
+  document.getElementById('expSecDiv').style.display   = '';
   document.getElementById('exportSection').classList.add('show');
 
   const tbody = document.getElementById('expTbody');
   tbody.innerHTML = '';
+  let grandTotal = 0;
 
-  const total = daysInMonth(viewYear, viewMonth);
+  // Flatten all entries for the month, sorted by date
+  const allRows = [];
+  const total   = daysInMonth(viewYear, viewMonth);
   for (let d = 1; d <= total; d++) {
-    const ds   = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
-    const log  = logsCache[ds];
-    const date = new Date(viewYear, viewMonth, d);
-    const tr   = document.createElement('tr');
-
-    const clientNames = (log?.clients_worked || []).map(cid => {
-      const cl = clientsList.find(c => c.id === cid);
-      return cl ? cl.name : '';
-    }).filter(Boolean);
-
-    const othersLabel = clientNames.includes('Others') && log?.others_note
-      ? clientNames.map(n => n === 'Others' ? `Others (${log.others_note})` : n)
-      : clientNames;
-
-    let statusCell = '—';
-    if (log?.tag === 'ph')       statusCell = `<span class="badge-ph">PH</span>`;
-    else if (log?.tag === 'off') statusCell = `<span class="badge-off">OFF</span>`;
-    else if (log)                statusCell = `<span style="color:var(--green);font-size:11px">● Logged</span>`;
-
-    tr.innerHTML = `
-      <td style="white-space:nowrap">${ds}</td>
-      <td class="muted">${DAYS[date.getDay()]}</td>
-      <td style="font-family:monospace;letter-spacing:.05em">${activeVeh?.plate || ''}</td>
-      <td>${othersLabel.length ? othersLabel.join(', ') : '<span class="muted">—</span>'}</td>
-      <td class="muted">${log?.notes || '—'}</td>
-      <td>${statusCell}</td>`;
-    tbody.appendChild(tr);
+    const ds = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
+    (logsCache[ds] || []).forEach(r => allRows.push({ ds, d, r }));
   }
 
+  if (!allRows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:20px">No entries for this period.</td></tr>`;
+    document.getElementById('expGrandTotal').textContent = '$0.00';
+    setTimeout(() => document.getElementById('expSecDiv').scrollIntoView({ behavior:'smooth' }), 80);
+    return;
+  }
+
+  allRows.forEach(({ ds, d, r }) => {
+    const date       = new Date(viewYear, viewMonth, d);
+    const clientName = resolveClientName(r);
+    const amt        = parseFloat(r.amount) || 0;
+    grandTotal += amt;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-family:monospace">${ds}</td>
+      <td class="muted">${DAYS[date.getDay()]}</td>
+      <td style="font-family:monospace;letter-spacing:.05em">${activeVeh?.plate || ''}</td>
+      <td class="muted">${activeVeh?.driver_name || ''}</td>
+      <td>${clientName}</td>
+      <td class="amt">$${amt.toFixed(2)}</td>
+      <td class="muted">${r.notes || '—'}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('expGrandTotal').textContent = '$' + grandTotal.toFixed(2);
   setTimeout(() => document.getElementById('expSecDiv').scrollIntoView({ behavior:'smooth' }), 80);
 }
 
@@ -1126,25 +1251,23 @@ function closeExport() {
 }
 
 function downloadCSV() {
-  const label = `${MONTHS[viewMonth]}_${viewYear}_${activeVeh?.plate || 'log'}`;
-  let csv = 'Date,Day,Vehicle,Driver,Clients Worked,Others Note,Notes,Tag\n';
+  const label = `${MONTHS[viewMonth]}_${viewYear}_${activeVeh?.plate || 'clientlog'}`;
+  let csv = 'Date,Day,Vehicle,Driver,Client,Amount,Notes\n';
   const total = daysInMonth(viewYear, viewMonth);
   for (let d = 1; d <= total; d++) {
     const ds   = `${viewYear}-${pad(viewMonth+1)}-${pad(d)}`;
-    const log  = logsCache[ds];
     const date = new Date(viewYear, viewMonth, d);
-    const cNames = (log?.clients_worked || [])
-      .map(cid => clientsList.find(c => c.id === cid)?.name || '').filter(Boolean).join('; ');
-    csv += [
-      ds,
-      DAYS[date.getDay()],
-      activeVeh?.plate || '',
-      activeVeh?.driver_name || '',
-      `"${cNames}"`,
-      `"${log?.others_note || ''}"`,
-      `"${(log?.notes || '').replace(/"/g,'""')}"`,
-      log?.tag || ''
-    ].join(',') + '\n';
+    (logsCache[ds] || []).forEach(r => {
+      csv += [
+        ds,
+        DAYS[date.getDay()],
+        activeVeh?.plate || '',
+        activeVeh?.driver_name || '',
+        `"${resolveClientName(r)}"`,
+        parseFloat(r.amount).toFixed(2),
+        `"${(r.notes || '').replace(/"/g,'""')}"`
+      ].join(',') + '\n';
+    });
   }
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
